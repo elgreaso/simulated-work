@@ -1,7 +1,6 @@
 //This component represents a list of employees
 //It is a stateless component that is passed an array of employees as a prop
 //It renders the Employee component for each employee in the array
-
 import React from 'react';
 import Employee from './Employee';
 

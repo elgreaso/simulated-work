@@ -2,7 +2,6 @@
 //It creates a connection to the database and returns a confirmation message when the server is running.
 //It will facilitate the communication between the front-end and the back-end.
 //It closes the database connection when the server is closed.
-//It is based on the code from the following tutorial: https://www.sqlitetutorial.net/sqlite-nodejs/connect/  
 
 //import the sqlite3 module
 const sqlite3 = require('sqlite3').verbose();

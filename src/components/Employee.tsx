@@ -9,6 +9,7 @@ interface EmployeeProps {
   position: string;
 }
 
+//Define the component as a function that takes in the props and returns the JSX
 const Employee: React.FC<EmployeeProps> = ({ id, name, position }) => {
   return (
     <div>
