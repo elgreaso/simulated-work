@@ -2,13 +2,10 @@
 import React, { useEffect, useState } from 'react';
 import EmployeeList from './components/EmployeeList';
 import ParameterForm from './components/ParameterForm';
-import { Employee } from './interfaces/Employee';
+import { Employee } from './components/Employee';
 
 const App: React.FC = () => {
-  const [employees, setEmployees] = useState<Employee[]>([
-    { id: 1, name: 'John Doe', position: 'Software Engineer' },
-    { id: 2, name: 'Jane Smith', position: 'Project Manager' },
-  ]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
 
   //Fetch employees from the API
   useEffect(() => {
@@ -22,7 +19,7 @@ const App: React.FC = () => {
   return (
     <div>
       <h1>Task Allocation and Scheduling App</h1>
-      <ParameterForm />
+      <ParameterForm setEmployees={setEmployees} />
       <EmployeeList employees={employees} />
       {/* The rest of the App component JSX */}
     </div>
