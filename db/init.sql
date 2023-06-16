@@ -103,7 +103,7 @@ CREATE TABLE Responsibilities (
     Difficulty INTEGER
 );
 
--- Junction table for the Employees and Responsibilities tables.
+-- Junction table for the Employees and Responsibilities tables. Lists all responsibilities for each employee.
 CREATE TABLE EmployeeResponsibilities (
     EmployeeID INTEGER,
     ResponsibilityID INTEGER,
@@ -112,7 +112,7 @@ CREATE TABLE EmployeeResponsibilities (
     FOREIGN KEY(ResponsibilityID) REFERENCES Responsibilities(ID)
 );
 
--- Junction table for the Positions and Responsibilities tables.
+-- Junction table for the Positions and Responsibilities tables. Lists all responsibilities for each position.
 CREATE TABLE PositionResponsibilities (
     PositionID INTEGER,
     ResponsibilityID INTEGER,
@@ -121,7 +121,7 @@ CREATE TABLE PositionResponsibilities (
     FOREIGN KEY(ResponsibilityID) REFERENCES Responsibilities(ID)
 );
 
--- Junction table for the Departments and Responsibilities tables.
+-- Junction table for the Departments and Responsibilities tables. Lists all responsibilities for each department.
 CREATE TABLE DepartmentResponsibilities (
     DepartmentID INTEGER,
     ResponsibilityID INTEGER,
@@ -130,7 +130,7 @@ CREATE TABLE DepartmentResponsibilities (
     FOREIGN KEY(ResponsibilityID) REFERENCES Responsibilities(ID)
 );
 
--- Junction table for the Divisions and Responsibilities tables.
+-- Junction table for the Divisions and Responsibilities tables. Lists all responsibilities for each division.
 CREATE TABLE DivisionResponsibilities (
     DivisionID INTEGER,
     ResponsibilityID INTEGER,
@@ -139,7 +139,7 @@ CREATE TABLE DivisionResponsibilities (
     FOREIGN KEY(ResponsibilityID) REFERENCES Responsibilities(ID)
 );
 
--- Junction table for the Branches and Responsibilities tables.
+-- Junction table for the Branches and Responsibilities tables. Lists all responsibilities for each branch.
 CREATE TABLE BranchResponsibilities (
     BranchID INTEGER,
     ResponsibilityID INTEGER,
@@ -162,7 +162,7 @@ CREATE TABLE Buildings (
     Longitude REAL
 );
 
--- Junction table for the Departments and Buildings tables.
+-- Junction table for the Departments and Buildings tables. Lists the buildings that each department occupies.
 CREATE TABLE DepartmentBuildings (
     DepartmentID INTEGER,
     BuildingID INTEGER,
@@ -171,7 +171,7 @@ CREATE TABLE DepartmentBuildings (
     FOREIGN KEY(BuildingID) REFERENCES Buildings(ID)
 );
 
--- Junction table for the Divisions and Buildings tables.
+-- Junction table for the Divisions and Buildings tables. Lists the buildings that each division occupies.
 CREATE TABLE DivisionBuildings (
     DivisionID INTEGER,
     BuildingID INTEGER,
@@ -180,7 +180,7 @@ CREATE TABLE DivisionBuildings (
     FOREIGN KEY(BuildingID) REFERENCES Buildings(ID)
 );
 
--- Junction table for the Branches and Buildings tables.
+-- Junction table for the Branches and Buildings tables. Lists the buildings that each branch occupies.
 CREATE TABLE BranchBuildings (
     BranchID INTEGER,
     BuildingID INTEGER,
@@ -196,7 +196,7 @@ CREATE TABLE Amenities (
     Description TEXT
 );
 
--- Junction table for the Buildings and Amenities tables.
+-- Junction table for the Buildings and Amenities tables. Lists all amenities for each building.
 CREATE TABLE BuildingAmenities (
     BuildingID INTEGER,
     AmenityID INTEGER,
@@ -205,7 +205,7 @@ CREATE TABLE BuildingAmenities (
     FOREIGN KEY (AmenityID) REFERENCES Amenities(ID)
 );
 
--- Junction table for the Branches and Amenities tables.
+-- Junction table for the Branches and Amenities tables. Lists all required amenities for each branch.
 CREATE TABLE BranchRequirements (
     BranchID INTEGER,
     AmenityID INTEGER,
@@ -231,20 +231,6 @@ CREATE TABLE GroupSchedules (
     StartDateTime TEXT,
     EndDateTime TEXT,    
     FOREIGN KEY(DepartmentID) REFERENCES Departments(ID)
-);
-
-CREATE TABLE Procedures (
-    ID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Name TEXT,
-    Description TEXT
-);
-
-CREATE TABLE EmployeeProcedures (
-    ID INTEGER PRIMARY KEY AUTOINCREMENT,
-    EmployeeID INTEGER,
-    ProcedureID INTEGER,
-    FOREIGN KEY(EmployeeID) REFERENCES Employees(ID),
-    FOREIGN KEY(ProcedureID) REFERENCES Procedures(ID)
 );
 
 -- Add the foreign keys for the Employees table after all other tables are created.
