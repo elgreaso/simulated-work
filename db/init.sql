@@ -1,5 +1,6 @@
 PRAGMA foreign_keys = ON;
 
+-- Contains all possible employee information.
 CREATE TABLE Employees (
     ID INTEGER PRIMARY KEY AUTOINCREMENT,
     DOB INTEGER,
@@ -25,8 +26,10 @@ CREATE TABLE Employees (
     SalaryID INTEGER,
     BranchID INTEGER,
     SupervisorID INTEGER
+    FOREIGN KEY(SupervisorID) REFERENCES Employees(ID);
 );
 
+--Contains basic information for all departments.
 CREATE TABLE Departments (
     ID INTEGER PRIMARY KEY AUTOINCREMENT,
     Name TEXT,
@@ -37,6 +40,7 @@ CREATE TABLE Departments (
     FOREIGN KEY(ManagerID) REFERENCES Employees(ID)
 );
 
+-- Contains basic information for all divisions.
 CREATE TABLE Divisions (
     ID INTEGER PRIMARY KEY AUTOINCREMENT,
     Name TEXT,
@@ -49,6 +53,7 @@ CREATE TABLE Divisions (
     FOREIGN KEY(ManagerID) REFERENCES Employees(ID)
 );
 
+--Contains basic information for all branches.
 CREATE TABLE Branches (
     ID INTEGER PRIMARY KEY AUTOINCREMENT,
     Name TEXT,
@@ -62,7 +67,17 @@ CREATE TABLE Branches (
     FOREIGN KEY(ManagerID) REFERENCES Employees(ID)
 );
 
--- Create the Positions table, which contains all possible job positions and their specifics.
+-- Contains all possible pay grades, levels, and steps.
+CREATE TABLE Salaries (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    PayGrade TEXT,
+    Level INTEGER,
+    Step INTEGER
+    HourlyRate INTEGER,
+    AnnualSalary INTEGER
+);
+
+-- Contains all possible job positions and their specifics, including pay info.
 CREATE TABLE Positions (
     ID INTEGER PRIMARY KEY AUTOINCREMENT,
     Name TEXT,
@@ -78,17 +93,17 @@ CREATE TABLE Positions (
     FOREIGN KEY(SalaryEnd) REFERENCES Salaries(ID)
 );
 
--- Create the Responsibilities table, which contains all possible responsibilities.
+-- Contains all possible responsibilities, for all employees, positions, departments, divisions, and branches.
 CREATE TABLE Responsibilities (
     ID INTEGER PRIMARY KEY AUTOINCREMENT,
     Name TEXT,
     Description TEXT,
     TimeRequired INTEGER,
-    RequiredExperience INTEGER,
+    MinExperience INTEGER,
     Difficulty INTEGER
 );
 
--- Create the many-to-many junction table for the Employees and Responsibilities tables.
+-- Junction table for the Employees and Responsibilities tables.
 CREATE TABLE EmployeeResponsibilities (
     EmployeeID INTEGER,
     ResponsibilityID INTEGER,
@@ -97,7 +112,7 @@ CREATE TABLE EmployeeResponsibilities (
     FOREIGN KEY(ResponsibilityID) REFERENCES Responsibilities(ID)
 );
 
--- Create the many-to-many junction tables for the Positions, Branches, Divisions, and Departments tables.
+-- Junction table for the Positions and Responsibilities tables.
 CREATE TABLE PositionResponsibilities (
     PositionID INTEGER,
     ResponsibilityID INTEGER,
@@ -106,22 +121,7 @@ CREATE TABLE PositionResponsibilities (
     FOREIGN KEY(ResponsibilityID) REFERENCES Responsibilities(ID)
 );
 
-CREATE TABLE BranchResponsibilities (
-    BranchID INTEGER,
-    ResponsibilityID INTEGER,
-    PRIMARY KEY(BranchID, ResponsibilityID),
-    FOREIGN KEY(BranchID) REFERENCES Branches(ID),
-    FOREIGN KEY(ResponsibilityID) REFERENCES Responsibilities(ID)
-);
-
-CREATE TABLE DivisionResponsibilities (
-    DivisionID INTEGER,
-    ResponsibilityID INTEGER,
-    PRIMARY KEY(DivisionID, ResponsibilityID),
-    FOREIGN KEY(DivisionID) REFERENCES Divisions(ID),
-    FOREIGN KEY(ResponsibilityID) REFERENCES Responsibilities(ID)
-);
-
+-- Junction table for the Departments and Responsibilities tables.
 CREATE TABLE DepartmentResponsibilities (
     DepartmentID INTEGER,
     ResponsibilityID INTEGER,
@@ -130,42 +130,117 @@ CREATE TABLE DepartmentResponsibilities (
     FOREIGN KEY(ResponsibilityID) REFERENCES Responsibilities(ID)
 );
 
--- Create the Salaries table, which contains all possible pay grades, levels, and steps.
-CREATE TABLE Salaries (
-    ID INTEGER PRIMARY KEY AUTOINCREMENT,
-    PayGrade TEXT,
-    Level INTEGER,
-    Step INTEGER
-    HourlyRate INTEGER,
-    AnnualSalary INTEGER
+-- Junction table for the Divisions and Responsibilities tables.
+CREATE TABLE DivisionResponsibilities (
+    DivisionID INTEGER,
+    ResponsibilityID INTEGER,
+    PRIMARY KEY(DivisionID, ResponsibilityID),
+    FOREIGN KEY(DivisionID) REFERENCES Divisions(ID),
+    FOREIGN KEY(ResponsibilityID) REFERENCES Responsibilities(ID)
 );
 
+-- Junction table for the Branches and Responsibilities tables.
+CREATE TABLE BranchResponsibilities (
+    BranchID INTEGER,
+    ResponsibilityID INTEGER,
+    PRIMARY KEY(BranchID, ResponsibilityID),
+    FOREIGN KEY(BranchID) REFERENCES Branches(ID),
+    FOREIGN KEY(ResponsibilityID) REFERENCES Responsibilities(ID)
+);
+
+-- Contains identifying information for all buildings.
+CREATE TABLE Buildings (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    Name TEXT,
+    Description TEXT,
+    Address TEXT,
+    City TEXT,
+    State TEXT,
+    ZipCode TEXT,
+    Country TEXT,    
+    Latitude REAL,
+    Longitude REAL
+);
+
+-- Junction table for the Departments and Buildings tables.
+CREATE TABLE DepartmentBuildings (
+    DepartmentID INTEGER,
+    BuildingID INTEGER,
+    PRIMARY KEY (DepartmentID, BuildingID),
+    FOREIGN KEY(DepartmentID) REFERENCES Departments(ID),
+    FOREIGN KEY(BuildingID) REFERENCES Buildings(ID)
+);
+
+-- Junction table for the Divisions and Buildings tables.
+CREATE TABLE DivisionBuildings (
+    DivisionID INTEGER,
+    BuildingID INTEGER,
+    PRIMARY KEY (DivisionID, BuildingID),
+    FOREIGN KEY(DivisionID) REFERENCES Divisions(ID),
+    FOREIGN KEY(BuildingID) REFERENCES Buildings(ID)
+);
+
+-- Junction table for the Branches and Buildings tables.
+CREATE TABLE BranchBuildings (
+    BranchID INTEGER,
+    BuildingID INTEGER,
+    PRIMARY KEY (BranchID, BuildingID),
+    FOREIGN KEY(BranchID) REFERENCES Branches(ID),
+    FOREIGN KEY(BuildingID) REFERENCES Buildings(ID)
+);
+
+-- Contains all possible amenities.
+CREATE TABLE Amenities (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    Name TEXT,
+    Description TEXT
+);
+
+-- Junction table for the Buildings and Amenities tables.
+CREATE TABLE BuildingAmenities (
+    BuildingID INTEGER,
+    AmenityID INTEGER,
+    PRIMARY KEY (BuildingID, AmenityID),
+    FOREIGN KEY (BuildingID) REFERENCES Buildings(ID),
+    FOREIGN KEY (AmenityID) REFERENCES Amenities(ID)
+);
+
+-- Junction table for the Branches and Amenities tables.
+CREATE TABLE BranchRequirements (
+    BranchID INTEGER,
+    AmenityID INTEGER,
+    PRIMARY KEY (BranchID, AmenityID),
+    FOREIGN KEY (BranchID) REFERENCES Branches(ID),
+    FOREIGN KEY (AmenityID) REFERENCES Amenities(ID)
+);
+
+--WIP
 CREATE TABLE Schedules (
     ID INTEGER PRIMARY KEY AUTOINCREMENT,
     EmployeeID INTEGER,
     StartDateTime TEXT,
     EndDateTime TEXT,
-    ScheduleDescription TEXT,
+    Description TEXT,
     FOREIGN KEY(EmployeeID) REFERENCES Employees(ID)
 );
 
 CREATE TABLE GroupSchedules (
-    GroupScheduleID INTEGER PRIMARY KEY AUTOINCREMENT,
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    Description TEXT,
     DepartmentID INTEGER,
     StartDateTime TEXT,
-    EndDateTime TEXT,
-    ScheduleDescription TEXT,
+    EndDateTime TEXT,    
     FOREIGN KEY(DepartmentID) REFERENCES Departments(ID)
 );
 
 CREATE TABLE Procedures (
     ID INTEGER PRIMARY KEY AUTOINCREMENT,
-    ProcedureName TEXT,
-    ProcedureDescription TEXT
+    Name TEXT,
+    Description TEXT
 );
 
 CREATE TABLE EmployeeProcedures (
-    EmployeeProcedureID INTEGER PRIMARY KEY AUTOINCREMENT,
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
     EmployeeID INTEGER,
     ProcedureID INTEGER,
     FOREIGN KEY(EmployeeID) REFERENCES Employees(ID),
@@ -177,4 +252,3 @@ ALTER TABLE Employees
     ADD FOREIGN KEY(PositionID) REFERENCES Positions(ID),
     ADD FOREIGN KEY(SalaryID) REFERENCES Salaries(ID),
     ADD FOREIGN KEY(BranchID) REFERENCES Branches(ID),
-    ADD FOREIGN KEY(SupervisorID) REFERENCES Employees(ID);
