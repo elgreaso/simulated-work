@@ -1,16 +1,19 @@
+import { Employee } from '../components/Employee';
+
+//Library to generate fake data
+const { faker } = require('@faker-js/faker');
+
 //Generate a specified number of employees with random names and positions
-export function generateEmployees(count: number) {
-    const names = ['John', 'Jane', 'Bob', 'Alice', 'Charlie', 'Emily'];
-    const positions = ['Software Engineer', 'Project Manager', 'Product Manager', 'Designer', 'Data Analyst', 'Tester'];
-  
-    let employees = [];
-    for (let i = 0; i < count; i++) {
+export function generateEmployees(numEmployees: number): Employee[] {
+    let employees: Employee[] = [];
+    for (let i = 0; i < numEmployees; i++) {
         employees.push({
-            id: i + 1,
-            name: names[Math.floor(Math.random() * names.length)],
-            position: positions[Math.floor(Math.random() * positions.length)],
+            id: i,
+            sex: faker.person.sex(),
+            firstName: faker.name.firstName(), // generates a random first name
+            lastName: faker.name.lastName(), // generates a random last name
+            position: faker.name.jobTitle(), // generates a random job title
         });
     }
-  
     return employees;
 }

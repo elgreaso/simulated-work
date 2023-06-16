@@ -6,9 +6,11 @@ import Employee from './Employee';
 
 //Define an interface for the props that are passed to this component
 interface EmployeeData {
-    id: number;
-    name: string;
-    position: string;
+  id: number;
+  sex: string;
+  firstName: string;
+  lastName: string;
+  position: string;
 }
 
 interface EmployeeListProps {

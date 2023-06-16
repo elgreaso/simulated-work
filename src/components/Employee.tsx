@@ -5,17 +5,19 @@ import React from 'react';
 //Define the syntax that must be followed to create an Employee object.
 export interface Employee {
   id: number;
-  name: string;
+  sex: string;
+  firstName: string;
+  lastName: string;
   position: string;
 }
 
 //Define the component as a function that takes in the props and returns the JSX
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-const Employee: React.FC<Employee> = ({ id, name, position }) => {
+const Employee: React.FC<Employee> = ({ id, sex, firstName, lastName, position }) => {
   return (
     <div>
-      <h2>{name}</h2>
-      <p>{position}</p>
+      <h2>{firstName}</h2> <h2>{lastName}</h2>
+      <p>{id}</p> <p>{sex}</p> <p>{position}</p>
     </div>
   );
 };
