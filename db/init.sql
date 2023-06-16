@@ -29,7 +29,7 @@ CREATE TABLE Employees (
     FOREIGN KEY(SupervisorID) REFERENCES Employees(ID);
 );
 
---Contains basic information for all departments.
+--Contains basic information for each department.
 CREATE TABLE Departments (
     ID INTEGER PRIMARY KEY AUTOINCREMENT,
     Name TEXT,
@@ -40,7 +40,7 @@ CREATE TABLE Departments (
     FOREIGN KEY(ManagerID) REFERENCES Employees(ID)
 );
 
--- Contains basic information for all divisions.
+-- Contains basic information for each division.
 CREATE TABLE Divisions (
     ID INTEGER PRIMARY KEY AUTOINCREMENT,
     Name TEXT,
@@ -53,7 +53,7 @@ CREATE TABLE Divisions (
     FOREIGN KEY(ManagerID) REFERENCES Employees(ID)
 );
 
---Contains basic information for all branches.
+--Contains basic information for each branch.
 CREATE TABLE Branches (
     ID INTEGER PRIMARY KEY AUTOINCREMENT,
     Name TEXT,
