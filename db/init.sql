@@ -29,7 +29,7 @@ CREATE TABLE Employees (
     FOREIGN KEY(SupervisorID) REFERENCES Employees(ID);
 );
 
---Contains basic information for each department.
+-- Contains basic information for each department.
 CREATE TABLE Departments (
     ID INTEGER PRIMARY KEY AUTOINCREMENT,
     Name TEXT,
@@ -53,7 +53,7 @@ CREATE TABLE Divisions (
     FOREIGN KEY(ManagerID) REFERENCES Employees(ID)
 );
 
---Contains basic information for each branch.
+-- Contains basic information for each branch.
 CREATE TABLE Branches (
     ID INTEGER PRIMARY KEY AUTOINCREMENT,
     Name TEXT,
@@ -93,17 +93,26 @@ CREATE TABLE Positions (
     FOREIGN KEY(SalaryEnd) REFERENCES Salaries(ID)
 );
 
+-- Contains all possible work categories.
+-- i.e. "Clerical", "Management", "Technical", "Labor", etc.
+CREATE TABLE WorkCategories (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    Name TEXT,
+    Description TEXT
+);
+
 -- Contains all possible responsibilities, for all employees, positions, departments, divisions, and branches.
+-- i.e. "Answer phones", "Manage employees", "Manage budget", "Manage inventory", etc.
 CREATE TABLE Responsibilities (
     ID INTEGER PRIMARY KEY AUTOINCREMENT,
     Name TEXT,
     Description TEXT,
-    TimeRequired INTEGER,
-    MinExperience INTEGER,
-    Difficulty INTEGER
+    Category INTEGER,
+    Difficulty INTEGER,
+    FOREIGN KEY(Category) REFERENCES WorkCategories(ID)
 );
 
--- Junction table for the Employees and Responsibilities tables. Lists all responsibilities for each employee.
+-- Junction table for the Employees and Responsibilities tables.
 CREATE TABLE EmployeeResponsibilities (
     EmployeeID INTEGER,
     ResponsibilityID INTEGER,
@@ -112,7 +121,7 @@ CREATE TABLE EmployeeResponsibilities (
     FOREIGN KEY(ResponsibilityID) REFERENCES Responsibilities(ID)
 );
 
--- Junction table for the Positions and Responsibilities tables. Lists all responsibilities for each position.
+-- Junction table for the Positions and Responsibilities tables.
 CREATE TABLE PositionResponsibilities (
     PositionID INTEGER,
     ResponsibilityID INTEGER,
@@ -121,7 +130,7 @@ CREATE TABLE PositionResponsibilities (
     FOREIGN KEY(ResponsibilityID) REFERENCES Responsibilities(ID)
 );
 
--- Junction table for the Departments and Responsibilities tables. Lists all responsibilities for each department.
+-- Junction table for the Departments and Responsibilities tables.
 CREATE TABLE DepartmentResponsibilities (
     DepartmentID INTEGER,
     ResponsibilityID INTEGER,
@@ -130,7 +139,7 @@ CREATE TABLE DepartmentResponsibilities (
     FOREIGN KEY(ResponsibilityID) REFERENCES Responsibilities(ID)
 );
 
--- Junction table for the Divisions and Responsibilities tables. Lists all responsibilities for each division.
+-- Junction table for the Divisions and Responsibilities tables.
 CREATE TABLE DivisionResponsibilities (
     DivisionID INTEGER,
     ResponsibilityID INTEGER,
@@ -139,13 +148,63 @@ CREATE TABLE DivisionResponsibilities (
     FOREIGN KEY(ResponsibilityID) REFERENCES Responsibilities(ID)
 );
 
--- Junction table for the Branches and Responsibilities tables. Lists all responsibilities for each branch.
+-- Junction table for the Branches and Responsibilities tables.
 CREATE TABLE BranchResponsibilities (
     BranchID INTEGER,
     ResponsibilityID INTEGER,
     PRIMARY KEY(BranchID, ResponsibilityID),
     FOREIGN KEY(BranchID) REFERENCES Branches(ID),
     FOREIGN KEY(ResponsibilityID) REFERENCES Responsibilities(ID)
+);
+
+-- Contains the individual tasks that make up each responsibility.
+CREATE TABLE Tasks (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    Name TEXT,
+    Description TEXT,
+    ResponsibilityID INTEGER,
+    FOREIGN KEY(ResponsibilityID) REFERENCES Responsibilities(ID)
+);
+
+-- Contains all possible work statuses.
+CREATE TABLE WorkStatuses (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    Name TEXT,
+    Description TEXT
+);
+
+-- Contains all work records for all employees.
+CREATE TABLE WorkRecords (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    EmployeeID INTEGER,
+    TaskID INTEGER,
+    WorkCategoryID INTEGER,
+    DatePerformed TEXT,
+    Duration INTEGER,
+    Status INTEGER,
+    FOREIGN KEY(EmployeeID) REFERENCES Employees(ID),
+    FOREIGN KEY(TaskID) REFERENCES Tasks(ID),
+    FOREIGN KEY(WorkCategoryID) REFERENCES WorkCategories(ID),
+    FOREIGN KEY(Status) REFERENCES WorkStatuses(ID)
+);
+
+-- Contains all possible requirements, for all employees, positions, departments, divisions, and branches.
+CREATE TABLE Requirements (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    Name TEXT,
+    Description TEXT,
+    Type TEXT,
+    Frequency INTEGER,
+    ValidityPeriod INTEGER
+);
+
+-- Junction table for the Responsibilities and Requirements tables.
+CREATE TABLE ResponsibilityRequirements (
+    ResponsibilityID INTEGER,
+    RequirementID INTEGER,
+    PRIMARY KEY(ResponsibilityID, RequirementID),
+    FOREIGN KEY(ResponsibilityID) REFERENCES Responsibilities(ID),
+    FOREIGN KEY(RequirementID) REFERENCES Requirements(ID)
 );
 
 -- Contains identifying information for all buildings.
