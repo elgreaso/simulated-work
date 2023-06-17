@@ -1,23 +1,35 @@
 import { Employee } from '../components/Employee';
+import populationData from './populationData.json';
 
 //Library to generate fake data
 const { faker } = require('@faker-js/faker');
 
 //Generate a specified number of employees with random names and positions
-export const generateEmployees = (numEmployees: number): Employee[] => {
+export const generateEmployees = async (numEmployees: number): Promise<{employees: Employee[], employeesPerYear: any[]}> => {
+    const currentYear = new Date().getFullYear();
+    const populationThisYear = populationData.find((item: { year: number; population: number }) => item.year === currentYear)?.population || 0;
+
+    const employeePercentOfPopulation = numEmployees / populationThisYear;
+
+    const employeesPerYear = populationData.map((data: { year: number, population: number }) => {
+        return {
+            year: data.year,
+            employees: Math.round(data.population * employeePercentOfPopulation)
+        };
+    });
+
     const employees: Employee[] = [];
     const dateNow = new Date();
-  
+
     for (let i = 1; i <= numEmployees; i++) {
         const yearsEmployed = (1/-0.17) * Math.log(i / numEmployees);
-        const daysEmployed = Math.floor(yearsEmployed * 365.25); // Consider leap years
-  
+        const daysEmployed = Math.floor(yearsEmployed * 365.25); 
+
         let startDate = new Date();
         startDate.setDate(dateNow.getDate() - daysEmployed);
-  
-        // Ensure startDate is a Monday
+
         startDate = getPreviousMonday(startDate);
-  
+
         const newEmployee: Employee = {
             id: i,
             sex: faker.person.sex(),
@@ -32,10 +44,10 @@ export const generateEmployees = (numEmployees: number): Employee[] => {
             status: 'Removed',
         };
       
-      employees.push(newEmployee);
+        employees.push(newEmployee);
     }
-  
-    return employees;
+
+    return {employees, employeesPerYear};
 };
 
 //Get the previous Monday from a given date

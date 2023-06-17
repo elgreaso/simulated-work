@@ -42,7 +42,9 @@ const ParameterForm: React.FC<{ setEmployees: (employees: Employee[]) => void }>
     //Create a function to handle form submission
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setEmployees(generateEmployees(employeeCount));
+        generateEmployees(employeeCount).then(({employees}) => {
+            setEmployees(employees);
+        });
         //Use the state values here to populate database
         //For now, log the state to the console
         console.log(state);
