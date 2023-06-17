@@ -95,7 +95,7 @@ CREATE TABLE Positions (
 
 -- Contains all possible work categories.
 -- i.e. "Clerical", "Management", "Technical", "Labor", etc.
-CREATE TABLE WorkCategories (
+CREATE TABLE ResponsibilityCategories (
     ID INTEGER PRIMARY KEY AUTOINCREMENT,
     Name TEXT,
     Description TEXT
@@ -109,7 +109,7 @@ CREATE TABLE Responsibilities (
     Description TEXT,
     Category INTEGER,
     Difficulty INTEGER,
-    FOREIGN KEY(Category) REFERENCES WorkCategories(ID)
+    FOREIGN KEY(Category) REFERENCES ResponsibilityCategories(ID)
 );
 
 -- Junction table for the Employees and Responsibilities tables.
@@ -178,13 +178,13 @@ CREATE TABLE WorkRecords (
     ID INTEGER PRIMARY KEY AUTOINCREMENT,
     EmployeeID INTEGER,
     TaskID INTEGER,
-    WorkCategoryID INTEGER,
+    ResponsibilityCategoryID INTEGER,
     DatePerformed TEXT,
     Duration INTEGER,
     Status INTEGER,
     FOREIGN KEY(EmployeeID) REFERENCES Employees(ID),
     FOREIGN KEY(TaskID) REFERENCES Tasks(ID),
-    FOREIGN KEY(WorkCategoryID) REFERENCES WorkCategories(ID),
+    FOREIGN KEY(ResponsibilityCategoryID) REFERENCES ResponsibilityCategories(ID),
     FOREIGN KEY(Status) REFERENCES WorkStatuses(ID)
 );
 
@@ -265,7 +265,7 @@ CREATE TABLE BuildingAmenities (
 );
 
 -- Junction table for the Branches and Amenities tables. Lists all required amenities for each branch.
-CREATE TABLE BranchRequirements (
+CREATE TABLE BranchAmenities (
     BranchID INTEGER,
     AmenityID INTEGER,
     PRIMARY KEY (BranchID, AmenityID),
@@ -273,27 +273,19 @@ CREATE TABLE BranchRequirements (
     FOREIGN KEY (AmenityID) REFERENCES Amenities(ID)
 );
 
---WIP
-CREATE TABLE Schedules (
+CREATE TABLE Equipment (
     ID INTEGER PRIMARY KEY AUTOINCREMENT,
-    EmployeeID INTEGER,
-    StartDateTime TEXT,
-    EndDateTime TEXT,
+    Name TEXT,
     Description TEXT,
-    FOREIGN KEY(EmployeeID) REFERENCES Employees(ID)
-);
-
-CREATE TABLE GroupSchedules (
-    ID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Description TEXT,
-    DepartmentID INTEGER,
-    StartDateTime TEXT,
-    EndDateTime TEXT,    
-    FOREIGN KEY(DepartmentID) REFERENCES Departments(ID)
+    Type TEXT,
+    Manufacturer TEXT,
+    Model TEXT,
+    PurchaseDate INTEGER,
+    PurchasePrice REAL
 );
 
 -- Add the foreign keys for the Employees table after all other tables are created.
 ALTER TABLE Employees
     ADD FOREIGN KEY(PositionID) REFERENCES Positions(ID),
     ADD FOREIGN KEY(SalaryID) REFERENCES Salaries(ID),
-    ADD FOREIGN KEY(BranchID) REFERENCES Branches(ID),
+    ADD FOREIGN KEY(BranchID) REFERENCES Branches(ID)

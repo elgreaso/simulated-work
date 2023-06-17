@@ -9,8 +9,13 @@ interface EmployeeData {
   id: number;
   sex: string;
   firstName: string;
+  middleName: string;
   lastName: string;
-  position: string;
+  email: string;
+  startDate: string;
+  positionID: number;
+  branchID: number;
+  supervisorID: number | null;
 }
 
 interface EmployeeListProps {

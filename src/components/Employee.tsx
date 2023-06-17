@@ -7,17 +7,23 @@ export interface Employee {
   id: number;
   sex: string;
   firstName: string;
+  middleName: string;
   lastName: string;
-  position: string;
+  email: string;
+  startDate: string;
+  positionID: number;
+  branchID: number;
+  supervisorID: number | null;
 }
 
 //Define the component as a function that takes in the props and returns the JSX
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-const Employee: React.FC<Employee> = ({ id, sex, firstName, lastName, position }) => {
+const Employee: React.FC<Employee> = ({ id, sex, firstName, middleName, lastName, email, startDate, positionID, branchID, supervisorID }) => {
   return (
     <div>
-      <h2>{firstName}</h2> <h2>{lastName}</h2>
-      <p>{id}</p> <p>{sex}</p> <p>{position}</p>
+      <h2>{firstName}</h2> <h2>{middleName}</h2> <h2>{lastName}</h2>
+      <p>{email}</p> <p>{startDate}</p> <p>{positionID}</p>
+      <p>{id}</p> <p>{sex}</p> <p>{branchID}</p> <p>{supervisorID}</p>
     </div>
   );
 };
