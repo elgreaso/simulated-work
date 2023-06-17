@@ -16,6 +16,7 @@ interface EmployeeData {
   positionID: number;
   branchID: number;
   supervisorID: number | null;
+  status: string;
 }
 
 interface EmployeeListProps {
