@@ -3,30 +3,30 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
-import fs from 'fs';
-import path from 'path';
 
 async function initializeDatabase() {
-  const db = await open({
-    filename: '../db/database.db',
-    driver: sqlite3.Database,
-  });
-
-  const initScript = fs.readFileSync(path.resolve(__dirname, '../db/init.sql')).toString();
-
-  await db.exec(initScript);
-
-  console.log('Database initialized');
+  const response = await fetch('http://localhost:3001/initialize');
+  const data = await response.json();
+  console.log(data.message);
 }
 
+// const root = ReactDOM.createRoot(
+//   document.getElementById('root') as HTMLElement
+// );
+// root.render(
+//   <React.StrictMode>
+//     <App />
+//   </React.StrictMode>
+// );
+
 initializeDatabase().then(() => {
-  ReactDOM.render(
+  const root = ReactDOM.createRoot(
+    document.getElementById('root') as HTMLElement
+  );
+  root.render(
     <React.StrictMode>
       <App />
-    </React.StrictMode>,
-    document.getElementById('root')
+    </React.StrictMode>
   );
 }).catch((error) => {
   console.error('Failed to initialize database:', error);
