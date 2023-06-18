@@ -26,8 +26,7 @@ CREATE TABLE Employees (
     SalaryID INTEGER,
     BranchID INTEGER,
     SupervisorID INTEGER,
-    Status TEXT,
-    FOREIGN KEY(SupervisorID) REFERENCES Employees(ID)
+    Status TEXT
 );
 
 -- Contains basic information for each department.
@@ -73,7 +72,7 @@ CREATE TABLE Salaries (
     ID INTEGER PRIMARY KEY AUTOINCREMENT,
     PayGrade TEXT,
     Level INTEGER,
-    Step INTEGER
+    Step INTEGER,
     HourlyRate INTEGER,
     AnnualSalary INTEGER
 );
@@ -285,8 +284,46 @@ CREATE TABLE Equipment (
     PurchasePrice REAL
 );
 
--- Add the foreign keys for the Employees table after all other tables are created.
-ALTER TABLE Employees
-    ADD FOREIGN KEY(PositionID) REFERENCES Positions(ID),
-    ADD FOREIGN KEY(SalaryID) REFERENCES Salaries(ID),
-    ADD FOREIGN KEY(BranchID) REFERENCES Branches(ID)
+-- Rename the old table
+ALTER TABLE Employees RENAME TO temp_Employees;
+
+-- Contains all possible employee information.
+CREATE TABLE Employees (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    DOB INTEGER,
+    FirstName TEXT,
+    MiddleName TEXT,
+    LastName TEXT,
+    Email TEXT,
+    StartDate INTEGER,
+    EndDate INTEGER,
+    EducationLevel TEXT,
+    YearsExperience INTEGER,
+    StreetAddress TEXT,
+    City TEXT,
+    State TEXT,
+    ZipCode INTEGER,
+    Country TEXT,
+    CellNumber INTEGER,
+    HomeNumber INTEGER,
+    WorkNumber INTEGER,
+    Sex TEXT,
+    PositionID INTEGER,
+    EmploymentType TEXT,
+    SalaryID INTEGER,
+    BranchID INTEGER,
+    SupervisorID INTEGER,
+    Status TEXT,
+    FOREIGN KEY(PositionID) REFERENCES Positions(ID),
+    FOREIGN KEY(SalaryID) REFERENCES Salaries(ID),
+    FOREIGN KEY(BranchID) REFERENCES Branches(ID),
+    FOREIGN KEY(SupervisorID) REFERENCES Employees(ID)
+);
+
+-- -- Copy records from the old table to the new one
+-- INSERT INTO new_table SELECT * FROM temp_old_table;
+
+-- Drop the old table
+DROP TABLE temp_Employees;
+
+

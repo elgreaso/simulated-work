@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "server": "node server.js",
+    "dev": "concurrently --kill-others \"npm --prefix server run start\" \"npm --prefix client run start\""
+  }
+}
