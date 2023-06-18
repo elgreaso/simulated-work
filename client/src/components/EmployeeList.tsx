@@ -1,38 +1,23 @@
-//This component represents a list of employees
-//It is a stateless component that is passed an array of employees as a prop
-//It renders the Employee component for each employee in the array
 import React from 'react';
-import Employee from './Employee';
+import { EmployeeListProps } from '../types';
+import EmployeeComponent from './Employee';
 
-//Define an interface for the props that are passed to this component
-interface EmployeeData {
-  id: number;
-  sex: string;
-  firstName: string;
-  middleName: string;
-  lastName: string;
-  email: string;
-  startDate: string;
-  positionID: number;
-  branchID: number;
-  supervisorID: number | null;
-  status: string;
-}
+/**
+ * `EmployeeList` Component
+ * 
+ * Represents a list of employees.
+ * 
+ * Maps over the `employees` array passed as a prop and renders an `EmployeeComponent` for each employee.
+ */
 
-interface EmployeeListProps {
-    employees: EmployeeData[];
-}
-
-//Define the component as a function that takes in the props and returns the JSX
 const EmployeeList: React.FC<EmployeeListProps> = ({ employees }) => {
     return (
       <div>
         {employees.map((employee) => (
-          <Employee key={employee.id} {...employee} />
+          <EmployeeComponent key={employee.id} {...employee} />
         ))}
       </div>
     );
 };
 
-//Export the component
 export default EmployeeList;

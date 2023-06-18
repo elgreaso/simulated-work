@@ -1,25 +1,15 @@
-//This file represents an individual employee in the list of employees
-//It is a stateless component that is passed the employee object as a prop
 import React from 'react';
+import { Employee } from '../types';
 
-//Define the syntax that must be followed to create an Employee object.
-export interface Employee {
-  id: number;
-  sex: string;
-  firstName: string;
-  middleName: string;
-  lastName: string;
-  email: string;
-  startDate: string;
-  positionID: number;
-  branchID: number;
-  supervisorID: number | null;
-  status: string;
-}
+/**
+ * `EmployeeComponent` Component
+ * 
+ * Represents an individual employee.
+ * 
+ * Renders the employee's details as text inside a <div> element.
+ */
 
-//Define the component as a function that takes in the props and returns the JSX
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-const Employee: React.FC<Employee> = ({ id, sex, firstName, middleName, lastName, email, startDate, positionID, branchID, supervisorID, status }) => {
+const EmployeeComponent: React.FC<Employee> = ({ id, sex, firstName, middleName, lastName, email, startDate, positionID, branchID, supervisorID, status }) => {
   return (
     <div>
       <h2>{firstName}</h2> <h2>{middleName}</h2> <h2>{lastName}</h2>
@@ -29,4 +19,4 @@ const Employee: React.FC<Employee> = ({ id, sex, firstName, middleName, lastName
   );
 };
 
-export default Employee;
+export default EmployeeComponent;

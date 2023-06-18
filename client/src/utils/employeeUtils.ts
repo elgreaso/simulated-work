@@ -1,12 +1,15 @@
-import { open } from 'sqlite';
-import * as sqlite3 from 'sqlite3';
-import { Employee } from '../components/Employee';
+import { Employee } from '../types';
 import populationData from './populationData.json';
 
 //Library to generate fake data
 const { faker } = require('@faker-js/faker');
 
-//Generate a specified number of employees with random names and positions
+/**
+ * This function generates new employees.
+ * It calculates their individual data such as hiring date, which is based on their position in the hiring order,
+ * and sets their start date to a Monday the correct number of years ago.
+ * The new employee's other details are also generated and sent to the server to be added to the database.
+ */
 export const generateEmployees = async (numEmployees: number): Promise<{employeesPerYear: any[], leavingEmployeesPerYear: any[], newHiresPerYear: any[]}> => {
     //Calculates the number of employees every year, assuming that it tracks with the US population
     const currentYear = new Date().getFullYear();
@@ -57,26 +60,31 @@ export const generateEmployees = async (numEmployees: number): Promise<{employee
     totalHires += initialEmployees;
 
     //Generate all employees
-    //const employees: Employee[] = [];
     const dateNow = new Date();
-
-    //Open the database
-    const db = await open({
-        filename: '.../db/database.db',
-        driver: sqlite3.Database
-    });
       
-    //Populate the database with employees
+    // Generate a new employee
     for (let i = 1; i <= totalHires; i++) {
+        /**
+         * Calculate the number of years the employee has been employed,
+         * based on their position in the hiring order.
+         */
         const yearsEmployed = (1/-0.17) * Math.log(i / numEmployees);
         const daysEmployed = Math.floor(yearsEmployed * 365.25); 
 
         let startDate = new Date();
         startDate.setDate(dateNow.getDate() - daysEmployed);
 
-        //Set start date to the previous Monday
+        // Set the start date to a Monday the correct number of years ago
         startDate = getPreviousMonday(startDate);
 
+        /**
+         * Generate the new employee's details.
+         * ID is their position in the hiring order.
+         * Sex, first name, middle name, and last name are randomly generated.
+         * Start date is calculated above.
+         * Position ID, branch ID, and supervisor ID are randomly selected.
+         * Status is 'Removed'.
+         */
         const newEmployee: Employee = {
             id: i,
             sex: faker.person.sex(),
@@ -91,31 +99,37 @@ export const generateEmployees = async (numEmployees: number): Promise<{employee
             status: 'Removed',
         };
 
-        // Insert the new employee into the database
-        await db.run(
-            `INSERT INTO Employees (ID, Sex, FirstName, MiddleName, LastName, Email, StartDate, PositionID, BranchID, SupervisorID, Status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [newEmployee.id, newEmployee.sex, newEmployee.firstName, newEmployee.middleName, newEmployee.lastName, newEmployee.email, newEmployee.startDate, newEmployee.positionID, newEmployee.branchID, newEmployee.supervisorID, newEmployee.status]
-        );
+        // Send a POST request to the server to add the new employee
+        const response = await fetch('http://localhost:3001/api/employees', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(newEmployee)
+        });
 
-        //employees.push(newEmployee);
+        // Throw an error if the request was not successful
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
     }
+
 
     return {employeesPerYear, leavingEmployeesPerYear, newHiresPerYear};
 };
 
 export const getEmployeeDataFromDatabase = async (): Promise<Employee[]> => {
-    const db = await open({
-        filename: '.../db/database.db',
-        driver: sqlite3.Database
-    });
+    // Fetch data from the server
+    const response = await fetch('http://localhost:3001/api/employees'); // Replace with your server URL and endpoint
 
-    const employees = await db.all('SELECT * FROM Employees LIMIT 100');
-
-    await db.close();
-
-    return employees;
-}
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    } else {
+        // Parse the data as JSON and return
+        const employees: Employee[] = await response.json();
+        return employees;
+    }
+};
 
 //Get the previous Monday from a given date
 function getPreviousMonday(date: Date): Date {

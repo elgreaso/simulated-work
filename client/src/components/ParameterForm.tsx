@@ -1,55 +1,47 @@
 //Create the ParameterForm component
 import React, { useState } from 'react';
-import { Employee } from './Employee';
+import { ParameterFormState, Employee } from '../types';
 import { generateEmployees, getEmployeeDataFromDatabase } from '../utils/employeeUtils';
 
-//Create an interface for the state to store the form input values
-interface ParameterFormState {
-    employeeCount: number;
-    maxGroupSize: number;
-    minGroupSize: number;
-    maxGroupCount: number;
-    minGroupCount: number;
-    employeesPerYear: { year: number, employees: number }[];
-    //add more state properties here
-}
+/**
+ * `ParameterForm` Component
+ *
+ * Provides an interface for the user to enter various parameters for employee generation.
+ * 
+ * After form submission, it fetches employee data from the database and updates the parent component's state.
+ */
 
 const ParameterForm: React.FC<{ setEmployees: (employees: Employee[]) => void }> = ({ setEmployees }) => {
 
     //Create state to store the form input values
-    const [state, setState] = useState<ParameterFormState>({
+    const initialState: ParameterFormState = {
         employeeCount: 0,
         maxGroupSize: 0,
         minGroupSize: 0,
         maxGroupCount: 0,
         minGroupCount: 0,
         employeesPerYear: [],
-        //Set the initial values of the other parameters here
-    });
+    };
 
-    //Create state to store the number of employees
-    const [employeeCount, setEmployeeCount] = useState<number>(0);
+    // Create state variables and their setter functions using the 'useState' hook.
+    const [state, setState] = useState<ParameterFormState>(initialState);
+    const [employeesPerYear, setEmployeesPerYear] = useState<{ year: number, employees: number }[]>([]);
+    const [leavingEmployeesPerYear, setLeavingEmployeesPerYear] = useState<{ year: number, leavingEmployees: number }[]>([]);
+    const [newHiresPerYear, setNewHiresPerYear] = useState<{ year: number, newHires: number }[]>([]);
 
-    //Create a function to handle input changes
+    // Create a function to handle input change
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        //Update the state
         setState({
           ...state,
           [e.target.name]: Number(e.target.value),  // convert input string to number
         });
-        //Update the employee count state
-        setEmployeeCount(parseInt(e.target.value));
     };
-
-    const [employeesPerYear, setEmployeesPerYear] = useState<{ year: number, employees: number }[]>([]);
-    const [leavingEmployeesPerYear, setLeavingEmployeesPerYear] = useState<{ year: number, leavingEmployees: number }[]>([]);
-    const [newHiresPerYear, setNewHiresPerYear] = useState<{ year: number, newHires: number }[]>([]);
 
     //Create a function to handle form submission
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        const {employeesPerYear, leavingEmployeesPerYear, newHiresPerYear} = await generateEmployees(employeeCount);
+        const {employeesPerYear, leavingEmployeesPerYear, newHiresPerYear} = await generateEmployees(state.employeeCount);
 
         const dbEmployees = await getEmployeeDataFromDatabase();
         setEmployees(dbEmployees);
@@ -108,7 +100,7 @@ const ParameterForm: React.FC<{ setEmployees: (employees: Employee[]) => void }>
                 <button type="submit">Submit</button>
                 <label>
                     Number of Employees:
-                    <input type="number" value={employeeCount} onChange={handleInputChange} />
+                    <input type="number" value={state.employeeCount} onChange={handleInputChange} />
                 </label>
                 <button type="submit">Generate</button>
             </form>
