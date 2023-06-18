@@ -1,7 +1,7 @@
 //Create the ParameterForm component
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import { Employee } from './Employee';
-import { generateEmployees } from '../utils/employeeUtils';
+import { generateEmployees, getEmployeeDataFromDatabase } from '../utils/employeeUtils';
 
 //Create an interface for the state to store the form input values
 interface ParameterFormState {
@@ -10,6 +10,7 @@ interface ParameterFormState {
     minGroupSize: number;
     maxGroupCount: number;
     minGroupCount: number;
+    employeesPerYear: { year: number, employees: number }[];
     //add more state properties here
 }
 
@@ -22,6 +23,7 @@ const ParameterForm: React.FC<{ setEmployees: (employees: Employee[]) => void }>
         minGroupSize: 0,
         maxGroupCount: 0,
         minGroupCount: 0,
+        employeesPerYear: [],
         //Set the initial values of the other parameters here
     });
 
@@ -39,47 +41,78 @@ const ParameterForm: React.FC<{ setEmployees: (employees: Employee[]) => void }>
         setEmployeeCount(parseInt(e.target.value));
     };
 
+    const [employeesPerYear, setEmployeesPerYear] = useState<{ year: number, employees: number }[]>([]);
+    const [leavingEmployeesPerYear, setLeavingEmployeesPerYear] = useState<{ year: number, leavingEmployees: number }[]>([]);
+    const [newHiresPerYear, setNewHiresPerYear] = useState<{ year: number, newHires: number }[]>([]);
+
     //Create a function to handle form submission
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        generateEmployees(employeeCount).then(({employees}) => {
-            setEmployees(employees);
-        });
-        //Use the state values here to populate database
-        //For now, log the state to the console
+
+        const {employeesPerYear, leavingEmployeesPerYear, newHiresPerYear} = await generateEmployees(employeeCount);
+
+        const dbEmployees = await getEmployeeDataFromDatabase();
+        setEmployees(dbEmployees);
+        setEmployeesPerYear(employeesPerYear);
+        setLeavingEmployeesPerYear(leavingEmployeesPerYear);
+        setNewHiresPerYear(newHiresPerYear);
+
         console.log(state);
     };
 
     return (
-        <form onSubmit={handleSubmit}>
-            <label>
-                Employee Count:
-                <input type="number" name="employeeCount" value={state.employeeCount} onChange={handleInputChange} />
-            </label>
-            <label>
-                Maximum Group Size:
-                <input type="number" name="maxGroupSize" value={state.maxGroupSize} onChange={handleInputChange} />
-            </label>
-            <label>
-                Minimum Group Size:
-                <input type="number" name="minGroupSize" value={state.minGroupSize} onChange={handleInputChange} />
-            </label>
-            <label>
-                Maximum Group Count:
-                <input type="number" name="maxGroupCount" value={state.maxGroupCount} onChange={handleInputChange} />
-            </label>
-            <label>
-                Minimum Group Count:
-                <input type="number" name="minGroupCount" value={state.minGroupCount} onChange={handleInputChange} />
-            </label>
-            {/* Add additional input fields as needed */}
-            <button type="submit">Submit</button>
-            <label>
-                Number of Employees:
-                <input type="number" value={employeeCount} onChange={handleInputChange} />
-            </label>
-            <button type="submit">Generate</button>
-        </form>
+        <div>
+            <h2>New Hires per Year:</h2>
+            {newHiresPerYear.map(data => (
+                <div key={data.year}>
+                    Year: {data.year}, New Hires: {data.newHires}
+                </div>
+            ))}
+
+            <h2>Employees per Year:</h2>
+            {employeesPerYear.map(data => (
+                <div key={data.year}>
+                    Year: {data.year}, Employees: {data.employees}
+                </div>
+            ))}
+
+            <h2>Employees Leaving per Year:</h2>
+            {leavingEmployeesPerYear.map(data => (
+                <div key={data.year}>
+                    Year: {data.year}, Leaving Employees: {data.leavingEmployees}
+                </div>
+            ))}
+
+            <form onSubmit={handleSubmit}>
+                <label>
+                    Employee Count:
+                    <input type="number" name="employeeCount" value={state.employeeCount} onChange={handleInputChange} />
+                </label>
+                <label>
+                    Maximum Group Size:
+                    <input type="number" name="maxGroupSize" value={state.maxGroupSize} onChange={handleInputChange} />
+                </label>
+                <label>
+                    Minimum Group Size:
+                    <input type="number" name="minGroupSize" value={state.minGroupSize} onChange={handleInputChange} />
+                </label>
+                <label>
+                    Maximum Group Count:
+                    <input type="number" name="maxGroupCount" value={state.maxGroupCount} onChange={handleInputChange} />
+                </label>
+                <label>
+                    Minimum Group Count:
+                    <input type="number" name="minGroupCount" value={state.minGroupCount} onChange={handleInputChange} />
+                </label>
+                {/* Add additional input fields as needed */}
+                <button type="submit">Submit</button>
+                <label>
+                    Number of Employees:
+                    <input type="number" value={employeeCount} onChange={handleInputChange} />
+                </label>
+                <button type="submit">Generate</button>
+            </form>
+        </div>
     );
 };
 

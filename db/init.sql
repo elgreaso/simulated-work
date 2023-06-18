@@ -25,8 +25,9 @@ CREATE TABLE Employees (
     EmploymentType TEXT,
     SalaryID INTEGER,
     BranchID INTEGER,
-    SupervisorID INTEGER
-    FOREIGN KEY(SupervisorID) REFERENCES Employees(ID);
+    SupervisorID INTEGER,
+    Status TEXT,
+    FOREIGN KEY(SupervisorID) REFERENCES Employees(ID)
 );
 
 -- Contains basic information for each department.
