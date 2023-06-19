@@ -61,36 +61,30 @@ app.use(express.json());
 
 // POST endpoint for adding a new employee
 app.post('/api/employees', (req, res) => {
-  const newEmployees = req.body; // This should now be an array of employees
-  console.log(newEmployees);
+    const newEmployees = req.body; // Assume this is an array of employee objects
+
+    // Build a SQL command for a bulk insert
+    const placeholders = newEmployees.map(() => '(?,?,?,?,?,?,?,?,?,?,?)').join(',');
+    const sql = `INSERT INTO Employees (ID, Sex, FirstName, MiddleName, LastName, Email, StartDate, PositionID, BranchID, SupervisorID, Status) VALUES ${placeholders}`;
+
+    // Flatten the employee objects into an array of parameters for the SQL command
+    const params = newEmployees.flatMap(employee => [
+        employee.ID, employee.Sex, employee.FirstName, employee.MiddleName, 
+        employee.LastName, employee.Email, employee.StartDate, employee.PositionID,
+        employee.BranchID, employee.SupervisorID, employee.Status
+    ]);
   
-  // Add validation for newEmployees here if needed
+    // Execute the SQL command
+    db.run(sql, params, function(err) {
+        if (err) {
+            console.log(err);
+            res.status(500).json({ error: err.message });
+            return;
+        }
 
-  // Start building the SQL command
-  let sql = `BEGIN TRANSACTION;`;
-
-  // Build a separate INSERT statement for each employee
-  for (let newEmployee of newEmployees) {
-      sql += `INSERT INTO Employees (ID, Sex, FirstName, MiddleName, LastName, Email, StartDate, PositionID, BranchID, SupervisorID, Status) 
-              VALUES (${newEmployee.ID}, '${newEmployee.Sex}', '${newEmployee.FirstName}', '${newEmployee.MiddleName}', 
-                      '${newEmployee.LastName}', '${newEmployee.Email}', '${newEmployee.StartDate}', ${newEmployee.PositionID},
-                      ${newEmployee.BranchID}, ${newEmployee.SupervisorID}, '${newEmployee.Status}');`
-  }
-
-  // Finish building the SQL command
-  sql += `COMMIT;`;
-
-  // Execute the SQL command
-  db.exec(sql, function(err) {
-      if (err) {
-          console.log(err);
-          res.status(500).json({ error: err.message });
-          return;
-      }
-
-      // If successful, respond with the number of inserted employees
-      res.json({ insertedCount: newEmployees.length });
-  });
+        // If successful, respond with the number of inserted employees
+        res.json({ count: newEmployees.length });
+    });
 });
 
 // Return all rows in the Employees table

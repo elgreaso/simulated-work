@@ -64,6 +64,9 @@ export const generateEmployees = async (numEmployees: number): Promise<{employee
 
     //Generate all employees
     const dateNow = new Date();
+
+    // Define the size of each batch
+    const batchSize = 100;
       
     // Generate a new employee
     for (let i = 1; i <= totalHires; i++) {
@@ -106,18 +109,21 @@ export const generateEmployees = async (numEmployees: number): Promise<{employee
         allEmployees.push(newEmployee);
     }
 
-    // Send a POST request to the server to add all new employees
-    const response = await fetch('http://localhost:3001/api/employees', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(allEmployees)  // Send all employees as an array
-    });
+    // Send the employees to the server in batches
+    for (let i = 0; i < allEmployees.length; i += batchSize) {
+        const batch = allEmployees.slice(i, i + batchSize);
+        const response = await fetch('http://localhost:3001/api/employees', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(batch)
+        });
 
-    // Throw an error if the request was not successful
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // Throw an error if the request was not successful
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
     }
 
     return {employeesPerYear, leavingEmployeesPerYear, newHiresPerYear};
