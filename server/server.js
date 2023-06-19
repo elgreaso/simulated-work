@@ -87,12 +87,19 @@ app.post('/api/employees', (req, res) => {
     });
 });
 
-// Return all rows in the Employees table
+// Return rows from the Employees table
 app.get('/api/employees', (req, res) => {
-  const sql = "SELECT * FROM Employees";
-  db.all(sql, [], (err, rows) => {
-    if (err) {
-      throw err;
+  const limit = req.query.limit ? parseInt(req.query.limit) : null;
+  let sql = 'SELECT * FROM Employees';
+  let params = [];
+
+  if (limit) {
+    sql += ' LIMIT ?';
+    params.push(limit);
+  }
+
+  db.all(sql, params, (err, rows) => {
+    if (err) {      throw err;
     }
     res.json(rows);
   });

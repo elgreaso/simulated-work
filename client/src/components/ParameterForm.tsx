@@ -16,15 +16,15 @@ const ParameterForm: React.FC<{ setEmployees: (employees: Employee[]) => void }>
     //Create state to store the form input values
     const initialState: ParameterFormState = {
         employeeCount: 0,
-        retrieveRecords: 0,
+        limit: 0,
         // Add other form fields as needed
     };
 
     // Create state variables and their setter functions using the 'useState' hook.
     const [state, setState] = useState<ParameterFormState>(initialState);
-    const [employeesPerYear, setEmployeesPerYear] = useState<{ year: number, employees: number }[]>([]);
-    const [leavingEmployeesPerYear, setLeavingEmployeesPerYear] = useState<{ year: number, leavingEmployees: number }[]>([]);
-    const [newHiresPerYear, setNewHiresPerYear] = useState<{ year: number, newHires: number }[]>([]);
+    // const [employeesPerYear, setEmployeesPerYear] = useState<{ year: number, employees: number }[]>([]);
+    // const [leavingEmployeesPerYear, setLeavingEmployeesPerYear] = useState<{ year: number, leavingEmployees: number }[]>([]);
+    // const [newHiresPerYear, setNewHiresPerYear] = useState<{ year: number, newHires: number }[]>([]);
 
     // Create a function to handle input change
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,10 +40,11 @@ const ParameterForm: React.FC<{ setEmployees: (employees: Employee[]) => void }>
 
         try {
             const employeeCount = state.employeeCount; // Or however you're getting the count
-            const {employeesPerYear, leavingEmployeesPerYear, newHiresPerYear} = await generateEmployees(employeeCount);
-            setEmployeesPerYear(employeesPerYear);
-            setLeavingEmployeesPerYear(leavingEmployeesPerYear);
-            setNewHiresPerYear(newHiresPerYear);
+            generateEmployees(employeeCount);
+            //const {employeesPerYear, leavingEmployeesPerYear, newHiresPerYear} = await generateEmployees(employeeCount);
+            // setEmployeesPerYear(employeesPerYear);
+            // setLeavingEmployeesPerYear(leavingEmployeesPerYear);
+            // setNewHiresPerYear(newHiresPerYear);
         } catch (error) {
             console.error("An error occurred while generating or fetching employees:", error);
             // Here you might want to update your UI to indicate that an error occurred
@@ -55,8 +56,8 @@ const ParameterForm: React.FC<{ setEmployees: (employees: Employee[]) => void }>
         e.preventDefault();
 
         try {
-            const retrieveRecords = state.retrieveRecords; // Or however you're getting the count            
-            const dbEmployees = await getEmployeeDataFromDatabase(retrieveRecords);
+            const limit = state.limit; // Or however you're getting the count            
+            const dbEmployees = await getEmployeeDataFromDatabase(limit);
             setEmployees(dbEmployees);
         } catch (error) {
             console.error("An error occurred while generating or fetching employees:", error);
@@ -79,13 +80,14 @@ const ParameterForm: React.FC<{ setEmployees: (employees: Employee[]) => void }>
             <form onSubmit={handleRetrieve}>
                 <label>
                     Retrieve Records:
-                    <input type="number" name="retrieveRecords" value={state.retrieveRecords} onChange={handleInputChange} />
+                    <input type="number" name="limit" value={state.limit} onChange={handleInputChange} />
                 </label>
                 {/* Add additional input fields as needed */}
                 <button type="submit">Retrieve</button>
+
             </form>
 
-            <h2>New Hires per Year:</h2>
+            {/* <h2>New Hires per Year:</h2>
             {newHiresPerYear.map(data => (
                 <div key={data.year}>
                     Year: {data.year}, New Hires: {data.newHires}
@@ -104,7 +106,7 @@ const ParameterForm: React.FC<{ setEmployees: (employees: Employee[]) => void }>
                 <div key={data.year}>
                     Year: {data.year}, Leaving Employees: {data.leavingEmployees}
                 </div>
-            ))}
+            ))} */}
 
         </div>
     );

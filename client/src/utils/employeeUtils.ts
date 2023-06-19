@@ -184,7 +184,7 @@ const sendEmployeeDataToDatabase = async (allEmployees: Employee[], batchSize: n
 export const getEmployeeDataFromDatabase = async (limit: number): Promise<Employee[]> => {
     limit = limit || 100; // Default to 100 employees
     // Fetch data from the server
-    const response = await fetch('http://localhost:3001/api/employees?limit=$(limit)'); // Replace with server URL and endpoint
+    const response = await fetch(`http://localhost:3001/api/employees?limit=${limit}`); // Replace with server URL and endpoint
 
     if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
