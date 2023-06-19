@@ -45,10 +45,6 @@ export interface EmployeeListProps {
 //Create an interface for the state to store the form input values
 export interface ParameterFormState {
     employeeCount: number;
-    maxGroupSize: number;
-    minGroupSize: number;
-    maxGroupCount: number;
-    minGroupCount: number;
-    employeesPerYear: { year: number, employees: number }[];
+    retrieveRecords: number;
     //add more state properties here
 }

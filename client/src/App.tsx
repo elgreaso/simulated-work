@@ -9,7 +9,7 @@ function App() {
 
   useEffect(() => {
     const fetchEmployees = async () => {
-      const data = await getEmployeeDataFromDatabase();
+      const data = await getEmployeeDataFromDatabase(10);
       setEmployees(data);
       console.log(data); // Debug: check the data received from the server
     };

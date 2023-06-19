@@ -16,11 +16,8 @@ const ParameterForm: React.FC<{ setEmployees: (employees: Employee[]) => void }>
     //Create state to store the form input values
     const initialState: ParameterFormState = {
         employeeCount: 0,
-        maxGroupSize: 0,
-        minGroupSize: 0,
-        maxGroupCount: 0,
-        minGroupCount: 0,
-        employeesPerYear: [],
+        retrieveRecords: 0,
+        // Add other form fields as needed
     };
 
     // Create state variables and their setter functions using the 'useState' hook.
@@ -38,30 +35,56 @@ const ParameterForm: React.FC<{ setEmployees: (employees: Employee[]) => void }>
     };
 
     // Create a function to handle form submission
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    const handleGenerate = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         try {
             const employeeCount = state.employeeCount; // Or however you're getting the count
             const {employeesPerYear, leavingEmployeesPerYear, newHiresPerYear} = await generateEmployees(employeeCount);
-            const dbEmployees = await getEmployeeDataFromDatabase();
-            
-            setEmployees(dbEmployees);
             setEmployeesPerYear(employeesPerYear);
             setLeavingEmployeesPerYear(leavingEmployeesPerYear);
             setNewHiresPerYear(newHiresPerYear);
-
-            console.log(state);
         } catch (error) {
             console.error("An error occurred while generating or fetching employees:", error);
             // Here you might want to update your UI to indicate that an error occurred
         }
     };
 
+    // Create a function to handle form submission
+    const handleRetrieve = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
 
+        try {
+            const retrieveRecords = state.retrieveRecords; // Or however you're getting the count            
+            const dbEmployees = await getEmployeeDataFromDatabase(retrieveRecords);
+            setEmployees(dbEmployees);
+        } catch (error) {
+            console.error("An error occurred while generating or fetching employees:", error);
+            // Here you might want to update your UI to indicate that an error occurred
+        }
+    };
 
     return (
         <div>
+
+            <form onSubmit={handleGenerate}>
+                <label>
+                    Employee Count:
+                    <input type="number" name="employeeCount" value={state.employeeCount} onChange={handleInputChange} />
+                </label>
+                {/* Add additional input fields as needed */}
+                <button type="submit">Generate</button>
+            </form>
+
+            <form onSubmit={handleRetrieve}>
+                <label>
+                    Retrieve Records:
+                    <input type="number" name="retrieveRecords" value={state.retrieveRecords} onChange={handleInputChange} />
+                </label>
+                {/* Add additional input fields as needed */}
+                <button type="submit">Retrieve</button>
+            </form>
+
             <h2>New Hires per Year:</h2>
             {newHiresPerYear.map(data => (
                 <div key={data.year}>
@@ -83,30 +106,6 @@ const ParameterForm: React.FC<{ setEmployees: (employees: Employee[]) => void }>
                 </div>
             ))}
 
-            <form onSubmit={handleSubmit}>
-                <label>
-                    Employee Count:
-                    <input type="number" name="employeeCount" value={state.employeeCount} onChange={handleInputChange} />
-                </label>
-                <label>
-                    Maximum Group Size:
-                    <input type="number" name="maxGroupSize" value={state.maxGroupSize} onChange={handleInputChange} />
-                </label>
-                <label>
-                    Minimum Group Size:
-                    <input type="number" name="minGroupSize" value={state.minGroupSize} onChange={handleInputChange} />
-                </label>
-                <label>
-                    Maximum Group Count:
-                    <input type="number" name="maxGroupCount" value={state.maxGroupCount} onChange={handleInputChange} />
-                </label>
-                <label>
-                    Minimum Group Count:
-                    <input type="number" name="minGroupCount" value={state.minGroupCount} onChange={handleInputChange} />
-                </label>
-                {/* Add additional input fields as needed */}
-                <button type="submit">Submit</button>
-            </form>
         </div>
     );
 };
