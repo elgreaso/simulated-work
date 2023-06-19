@@ -59,6 +59,9 @@ export const generateEmployees = async (numEmployees: number): Promise<{employee
     const initialEmployees = employeesPerYear.find(data => data.year === 1950)?.employees || 0;
     totalHires += initialEmployees;
 
+    // Array to hold all generated employees
+    const allEmployees: Employee[] = [];
+
     //Generate all employees
     const dateNow = new Date();
       
@@ -99,21 +102,23 @@ export const generateEmployees = async (numEmployees: number): Promise<{employee
             Status: 'Removed',
         };
 
-        // Send a POST request to the server to add the new employee
-        const response = await fetch('http://localhost:3001/api/employees', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(newEmployee)
-        });
-
-        // Throw an error if the request was not successful
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        // Add new employee to the array of all employees
+        allEmployees.push(newEmployee);
     }
 
+    // Send a POST request to the server to add all new employees
+    const response = await fetch('http://localhost:3001/api/employees', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(allEmployees)  // Send all employees as an array
+    });
+
+    // Throw an error if the request was not successful
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
 
     return {employeesPerYear, leavingEmployeesPerYear, newHiresPerYear};
 };

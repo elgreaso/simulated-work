@@ -37,20 +37,28 @@ const ParameterForm: React.FC<{ setEmployees: (employees: Employee[]) => void }>
         });
     };
 
-    //Create a function to handle form submission
+    // Create a function to handle form submission
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        const {employeesPerYear, leavingEmployeesPerYear, newHiresPerYear} = await generateEmployees(state.employeeCount);
+        try {
+            const employeeCount = state.employeeCount; // Or however you're getting the count
+            const {employeesPerYear, leavingEmployeesPerYear, newHiresPerYear} = await generateEmployees(employeeCount);
+            const dbEmployees = await getEmployeeDataFromDatabase();
+            
+            setEmployees(dbEmployees);
+            setEmployeesPerYear(employeesPerYear);
+            setLeavingEmployeesPerYear(leavingEmployeesPerYear);
+            setNewHiresPerYear(newHiresPerYear);
 
-        const dbEmployees = await getEmployeeDataFromDatabase();
-        setEmployees(dbEmployees);
-        setEmployeesPerYear(employeesPerYear);
-        setLeavingEmployeesPerYear(leavingEmployeesPerYear);
-        setNewHiresPerYear(newHiresPerYear);
-
-        console.log(state);
+            console.log(state);
+        } catch (error) {
+            console.error("An error occurred while generating or fetching employees:", error);
+            // Here you might want to update your UI to indicate that an error occurred
+        }
     };
+
+
 
     return (
         <div>
@@ -98,11 +106,6 @@ const ParameterForm: React.FC<{ setEmployees: (employees: Employee[]) => void }>
                 </label>
                 {/* Add additional input fields as needed */}
                 <button type="submit">Submit</button>
-                <label>
-                    Number of Employees:
-                    <input type="number" value={state.employeeCount} onChange={handleInputChange} />
-                </label>
-                <button type="submit">Generate</button>
             </form>
         </div>
     );
