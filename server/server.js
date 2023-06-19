@@ -71,10 +71,11 @@ app.post('/api/employees', (req, res) => {
 
     // Parameters for the SQL command
     const params = [
-        newEmployee.id, newEmployee.sex, newEmployee.firstName, newEmployee.middleName, 
-        newEmployee.lastName, newEmployee.email, newEmployee.startDate, newEmployee.positionID,
-        newEmployee.branchID, newEmployee.supervisorID, newEmployee.status
+      newEmployee.ID, newEmployee.Sex, newEmployee.FirstName, newEmployee.MiddleName, 
+      newEmployee.LastName, newEmployee.Email, newEmployee.StartDate, newEmployee.PositionID,
+      newEmployee.BranchID, newEmployee.SupervisorID, newEmployee.Status
     ];
+  
 
     // Execute the SQL command
     db.run(sql, params, function(err) {
@@ -90,7 +91,7 @@ app.post('/api/employees', (req, res) => {
 });
 
 // Return all rows in the Employees table
-app.get('/employees', (req, res) => {
+app.get('/api/employees', (req, res) => {
   const sql = "SELECT * FROM Employees";
   db.all(sql, [], (err, rows) => {
     if (err) {

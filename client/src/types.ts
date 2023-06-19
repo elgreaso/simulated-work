@@ -17,17 +17,17 @@
  */
 
 export interface Employee {
-    id: number;
-    sex: string;
-    firstName: string;
-    middleName: string;
-    lastName: string;
-    email: string;
-    startDate: string;
-    positionID: number;
-    branchID: number;
-    supervisorID: number | null;
-    status: string;
+    ID: number;
+    Sex: string;
+    FirstName: string;
+    MiddleName: string;
+    LastName: string;
+    Email: string;
+    StartDate: string;
+    PositionID: number;
+    BranchID: number;
+    SupervisorID: number | null;
+    Status: string;
 }
 
 /**

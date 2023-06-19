@@ -86,17 +86,17 @@ export const generateEmployees = async (numEmployees: number): Promise<{employee
          * Status is 'Removed'.
          */
         const newEmployee: Employee = {
-            id: i,
-            sex: faker.person.sex(),
-            firstName: faker.name.firstName(),
-            middleName: faker.name.firstName(),
-            lastName: faker.name.lastName(),
-            email: faker.internet.email(),
-            startDate: startDate.toISOString().split('T')[0],
-            positionID: Math.ceil(Math.random() * 10),
-            branchID: Math.ceil(Math.random() * 10),
-            supervisorID: i === 1 ? null : Math.ceil(Math.random() * (i - 1)),
-            status: 'Removed',
+            ID: i,
+            Sex: faker.person.sex(),
+            FirstName: faker.name.firstName(),
+            MiddleName: faker.name.firstName(),
+            LastName: faker.name.lastName(),
+            Email: faker.internet.email(),
+            StartDate: startDate.toISOString().split('T')[0],
+            PositionID: Math.ceil(Math.random() * 10),
+            BranchID: Math.ceil(Math.random() * 10),
+            SupervisorID: i === 1 ? null : Math.ceil(Math.random() * (i - 1)),
+            Status: 'Removed',
         };
 
         // Send a POST request to the server to add the new employee
@@ -118,9 +118,10 @@ export const generateEmployees = async (numEmployees: number): Promise<{employee
     return {employeesPerYear, leavingEmployeesPerYear, newHiresPerYear};
 };
 
+// This function fetches the employee data from the server
 export const getEmployeeDataFromDatabase = async (): Promise<Employee[]> => {
     // Fetch data from the server
-    const response = await fetch('http://localhost:3001/api/employees'); // Replace with your server URL and endpoint
+    const response = await fetch('http://localhost:3001/api/employees'); // Replace with server URL and endpoint
 
     if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

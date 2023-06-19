@@ -1,4 +1,4 @@
-PRAGMA foreign_keys = ON;
+PRAGMA foreign_keys = OFF;
 
 -- Contains all possible employee information.
 CREATE TABLE Employees (

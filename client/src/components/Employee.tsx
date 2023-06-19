@@ -1,22 +1,26 @@
 import React from 'react';
-import { Employee } from '../types';
+import { Employee as EmployeeType } from '../types';  // Import the Employee interface
 
-/**
- * `EmployeeComponent` Component
- * 
- * Represents an individual employee.
- * 
- * Renders the employee's details as text inside a <div> element.
- */
+interface EmployeeProps {
+  employee: EmployeeType;
+}
 
-const EmployeeComponent: React.FC<Employee> = ({ id, sex, firstName, middleName, lastName, email, startDate, positionID, branchID, supervisorID, status }) => {
+const Employee: React.FC<EmployeeProps> = ({ employee }) => {
+  console.log(employee); // Debug: check the data received from the server
   return (
     <div>
-      <h2>{firstName}</h2> <h2>{middleName}</h2> <h2>{lastName}</h2>
-      <p>{email}</p> <p>{startDate}</p> <p>{positionID}</p>
-      <p>{id}</p> <p>{sex}</p> <p>{branchID}</p> <p>{supervisorID}</p> <p>{status}</p>
+      <h2>{employee.FirstName} {employee.MiddleName} {employee.LastName}</h2>
+      <p>{employee.ID}</p>
+      <p>{employee.Sex}</p>
+      <p>{employee.Email}</p>
+      <p>{employee.StartDate}</p>
+      <p>{employee.PositionID}</p>
+      <p>{employee.BranchID}</p>
+      <p>{employee.SupervisorID}</p>
+      <p>{employee.Status}</p>
+      {/* Display other fields as needed */}
     </div>
   );
 };
 
-export default EmployeeComponent;
+export default Employee;

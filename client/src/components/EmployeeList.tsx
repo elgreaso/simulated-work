@@ -1,23 +1,25 @@
+// EmployeeList.tsx
 import React from 'react';
-import { EmployeeListProps } from '../types';
-import EmployeeComponent from './Employee';
+import Employee from './Employee';
+import { Employee as EmployeeType } from '../types';  // Import the Employee interface
 
-/**
- * `EmployeeList` Component
- * 
- * Represents a list of employees.
- * 
- * Maps over the `employees` array passed as a prop and renders an `EmployeeComponent` for each employee.
- */
+interface EmployeeListProps {
+  employees: EmployeeType[];
+}
 
 const EmployeeList: React.FC<EmployeeListProps> = ({ employees }) => {
-    return (
-      <div>
-        {employees.map((employee) => (
-          <EmployeeComponent key={employee.id} {...employee} />
-        ))}
-      </div>
-    );
+  //console.log(employees); // Debug: check the data received from the server
+  return (
+    <div>
+      {employees.length > 0 
+        ? employees.map((employee: EmployeeType) => {
+            //console.log(employee); // Debug: check the employee ID
+            return <Employee key={employee.ID} employee={employee} />;
+          })
+        : <p>No employees found</p>
+      }
+    </div>
+  );
 };
 
 export default EmployeeList;
