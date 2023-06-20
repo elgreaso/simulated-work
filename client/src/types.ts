@@ -18,12 +18,14 @@
 
 export interface Employee {
     ID: number;
+    DOB: number;
     Sex: string;
     FirstName: string;
     MiddleName: string;
     LastName: string;
     Email: string;
-    StartDate: string;
+    StartDate: number;
+    EndDate: number | null;
     PositionID: number;
     BranchID: number;
     SupervisorID: number | null;

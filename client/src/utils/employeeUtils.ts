@@ -1,8 +1,6 @@
 import { Employee } from '../types';
 import populationData from './populationData.json';
-
-//Library to generate fake data
-const { faker } = require('@faker-js/faker');
+import seedrandom from 'seedrandom';
 
 /**
  * This function generates new employees.
@@ -11,6 +9,9 @@ const { faker } = require('@faker-js/faker');
  * The new employee's other details are also generated and sent to the server to be added to the database.
  */
 export const generateEmployees = async (numEmployees: number, startYear: number, endYear: number, empHalfLife: number): Promise<void> => {
+
+    let seed = 'mySeed';
+    seedrandom(seed, { global: true });
     
     //Calculates the number of employees every year, assuming that it tracks with the US population
     const employeesPerYear = calculateEmployeesPerYear(numEmployees, populationData);
@@ -58,35 +59,33 @@ export const generateEmployees = async (numEmployees: number, startYear: number,
 
     // Array to hold all generated employees
     const allEmployees: Employee[] = [];
-    
-    // Generate a new employee
-    for (let i = 1; i <= totalHires; i++) {        
-
-        /**
-         * Generate the new employee's details.
-         * ID is their position in the hiring order.
-         * Sex, first name, middle name, and last name are randomly generated.
-         * Start date is calculated above.
-         * Position ID, branch ID, and supervisor ID are randomly selected.
-         * Status is 'Removed'.
-         */
-        const newEmployee: Employee = {
-            ID: i,
-            Sex: faker.person.sex(),
-            FirstName: faker.person.firstName(),
-            MiddleName: faker.person.middleName(),
-            LastName: faker.person.lastName(),
-            Email: faker.internet.email(),
-            StartDate: faker.date.past().toISOString().split('T')[0],
+    /**
+     * Generate the new employee's details.
+     * ID is their position in the hiring order.
+     * Sex, first name, middle name, and last name are randomly generated.
+     * Start date is calculated above.
+     * Position ID, branch ID, and supervisor ID are randomly selected.
+     * Status is 'Removed'.
+     */
+    for (let i = 0; i < totalHires; i++) {  // remember, array indices in JavaScript start from 0, not 1
+        let employee: Employee = {
+            ID: i + 1, // add 1 here if you want employee IDs to start from 1
+            DOB: birthDates[i].birthDate.getTime(), // assuming birthDate is a property in each object in birthDates array            
+            FirstName: firstNames[i].firstName, // access the property 'firstName'
+            MiddleName: middleNames[i].middleName, // access the property 'middleName'
+            LastName: lastNames[i].lastName, // access the property 'lastName'
+            Email: emails[i].email, // access the property 'email'
+            StartDate: startDatesAll[i].startDate.getTime(), // assuming startDate is a property in each object in startDatesAll array
+            EndDate: endDatesAll[i].endDate.getTime(), // assuming endDate is a property in each object in endDatesAll array
+            Sex: genders[i].gender, // access the property 'gender' of the object
             PositionID: Math.ceil(Math.random() * 10),
             BranchID: Math.ceil(Math.random() * 10),
-            SupervisorID: i === 1 ? null : Math.ceil(Math.random() * (i - 1)),
+            SupervisorID: i === 0 ? null : Math.ceil(Math.random() * i),
             Status: 'Removed',
         };
-
-        // Add new employee to the array of all employees
-        allEmployees.push(newEmployee);
-    }
+    
+        allEmployees.push(employee);
+    }    
 
     // Define the size of each batch, which is the number of employees to send to the server at once, and send the data to the server
     const batchSize = 100;

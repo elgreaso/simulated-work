@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { ParameterFormState, Employee } from '../types';
 import { generateEmployees, getEmployeeDataFromDatabase } from '../utils/employeeUtils';
-import seedrandom from 'seedrandom';
+
 
 /**
  * `ParameterForm` Component
@@ -43,9 +43,7 @@ const ParameterForm: React.FC<{ setEmployees: (employees: Employee[]) => void }>
     const handleGenerate = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        try {
-            
-            seedrandom(state.randomSeed.toString(), { global: true }); // Create a seeded random number generator
+        try {            
             const employeeCount = state.employeeCount; // Or however you're getting the count
             const startYear = state.startYear;
             const endYear = state.endYear;
