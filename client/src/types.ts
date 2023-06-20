@@ -47,5 +47,13 @@ export interface ParameterFormState {
     employeeCount: number;
     limit: number;
     randomSeed: number;
+    startYear: number;
+    endYear: number;
+    empHalfLife: number;
     //add more state properties here
+}
+
+export interface BirthDate {
+    employeeID: number;
+    birthDate: Date;
 }

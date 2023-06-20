@@ -19,6 +19,9 @@ const ParameterForm: React.FC<{ setEmployees: (employees: Employee[]) => void }>
         employeeCount: 0,
         limit: 0,
         randomSeed: Math.floor(Math.random() * 1000000),
+        startYear: 1950,
+        endYear: 2100,
+        empHalfLife: 5,
         // Add other form fields as needed
     };
 
@@ -44,7 +47,10 @@ const ParameterForm: React.FC<{ setEmployees: (employees: Employee[]) => void }>
             
             seedrandom(state.randomSeed.toString(), { global: true }); // Create a seeded random number generator
             const employeeCount = state.employeeCount; // Or however you're getting the count
-            generateEmployees(employeeCount);
+            const startYear = state.startYear;
+            const endYear = state.endYear;
+            const empHalfLife = state.empHalfLife;
+            generateEmployees(employeeCount, startYear, endYear, empHalfLife);
             //const {employeesPerYear, leavingEmployeesPerYear, newHiresPerYear} = await generateEmployees(employeeCount);
             // setEmployeesPerYear(employeesPerYear);
             // setLeavingEmployeesPerYear(leavingEmployeesPerYear);
@@ -80,6 +86,18 @@ const ParameterForm: React.FC<{ setEmployees: (employees: Employee[]) => void }>
                 <label>
                     Employee Count:
                     <input type="number" name="employeeCount" value={state.employeeCount} onChange={handleInputChange} />
+                </label>
+                <label>
+                    Start Year:
+                    <input type="number" name="startYear" value={state.startYear} onChange={handleInputChange} />
+                </label>
+                <label>
+                    End Year:
+                    <input type="number" name="endYear" value={state.endYear} onChange={handleInputChange} />
+                </label>
+                <label>
+                    Employee Half-Life:
+                    <input type="number" name="empHalfLife" value={state.empHalfLife} onChange={handleInputChange} />
                 </label>
                 {/* Add additional input fields as needed */}
                 <button type="submit">Generate</button>

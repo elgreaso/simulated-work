@@ -10,8 +10,8 @@ const { faker } = require('@faker-js/faker');
  * and sets their start date to a Monday the correct number of years ago.
  * The new employee's other details are also generated and sent to the server to be added to the database.
  */
-export const generateEmployees = async (numEmployees: number): Promise<void> => {
-
+export const generateEmployees = async (numEmployees: number, startYear: number, endYear: number, empHalfLife: number): Promise<void> => {
+    
     //Calculates the number of employees every year, assuming that it tracks with the US population
     const employeesPerYear = calculateEmployeesPerYear(numEmployees, populationData);
 
@@ -25,22 +25,36 @@ export const generateEmployees = async (numEmployees: number): Promise<void> => 
     const totalHires = calculateTotalHires(newHiresPerYear);
 
     //Calculates the initial number of employees from the target year
-    let targetStartYear = 1950;
+    let targetStartYear = startYear;
     const initialEmployees = targetStartYearEmployees(employeesPerYear, targetStartYear);
 
     // Calculate the start date of the initial employees. The employeeHalfLife is the number of years it takes for half of the employees to leave.
-    let employeeHalfLife = 5;
+    let employeeHalfLife = empHalfLife;
     const startDatesInitial = calculateStartDateInitial(initialEmployees, targetStartYear, employeeHalfLife);
 
     // Calculate the end dates of the initial employees
     const endDatesInitial = calculateEndDatesInitial(targetStartYear, startDatesInitial, employeeHalfLife);
 
     // Calculate the start date of the rest of the employees
-    let targetEndYear = 2100;
+    let targetEndYear = endYear;
     const startDatesAll = calculateStartDatesAll(newHiresPerYear, startDatesInitial, targetStartYear, targetEndYear);
 
     // Calculate the end dates of all employees
     const endDatesAll = calculateEndDatesAll(startDatesAll, employeeHalfLife, initialEmployees, endDatesInitial);
+
+    // Calculate the birth dates of all employees
+    const birthDates = calculateBirthDates(startDatesAll, endDatesAll);
+
+    // Generate the sex of all employees
+    const genders = calculateGenders(birthDates);
+
+    // Generate the names of all employees
+    const firstNames = calculateFirstNames(genders);
+    const middleNames = calculateMiddleNames(firstNames, genders);
+    const lastNames = calculateLastNames(startDatesAll);
+
+    // Generate the email addresses of all employees
+    const emails = calculateEmails(firstNames, middleNames, lastNames);
 
     // Array to hold all generated employees
     const allEmployees: Employee[] = [];
@@ -244,7 +258,6 @@ const calculateStartDatesAll = (newHiresPerYear: YearNewHiresData[], startDate: 
         }
         let newHiresThisWeek = Math.round(newHiresThisYear / 26);
         let hiringDate = new Date(firstMonday); // Avoid mutating the original date
-        console.log(firstMonday, newHiresThisYear, newHiresThisWeek);
 
         for (let j = 0; j < 26; j++) {
             // Advance to the next hiring week once enough hires have been made in the current week
@@ -254,8 +267,7 @@ const calculateStartDatesAll = (newHiresPerYear: YearNewHiresData[], startDate: 
                     startDate: hiringDate
                 });
             }
-            hiringDate.setDate(hiringDate.getDate() + 14);
-            console.log(startDate.length+1, hiringDate);         
+            hiringDate.setDate(hiringDate.getDate() + 14);      
         }             
     }
     return startDate;
@@ -296,6 +308,145 @@ const calculateEndDatesAll = (startDates: StartDate[], employeeHalfLife: number,
 
     return endDatesInitial;
 };
+
+interface BirthDate {
+    employeeID: number;
+    birthDate: Date;
+}
+
+// Calculate the birth dates for all employees
+const calculateBirthDates = (startDates: StartDate[], endDates: EndDate[]): BirthDate[] => {
+    let birthDates: BirthDate[] = [];
+    let average = 26;
+    let standardDeviation = 8;
+
+    for (let i = 0; i < startDates.length; i++) {
+        let startDate = startDates[i].startDate;
+        let endDate = endDates[i].endDate;
+        let result: number;
+
+        do {
+            result = getRandom(average, standardDeviation);
+        } while(result < 18 || endDate.getFullYear() - startDate.getFullYear() + result > 65);
+
+        let birthDate = new Date(startDate);
+        birthDate.setFullYear(birthDate.getFullYear() - result);
+        
+        birthDates.push({
+            employeeID: startDates[i].employeeID, //Changed from startDate.employeeID to startDates[i].employeeID
+            birthDate: birthDate
+        });
+    }
+    
+    return birthDates;
+};
+
+interface Gender {
+    employeeID: number;
+    gender: string;
+}
+
+// Calculate the gender of all employees
+function calculateGenders(birthDates: BirthDate[]): Gender[] {
+    return birthDates.map(birthDate => {
+        let randomNumber = Math.random();
+        let gender = randomNumber <= 0.5 ? 'Male' : 'Female';
+        return { employeeID: birthDate.employeeID, gender: gender };
+    });
+}
+
+const firstNameMData = require('./firstNameMData.json');
+const firstNameFData = require('./firstNameFData.json');
+const lastNamesData = require('./lastNamesData.json');
+
+interface FirstName {
+    employeeID: number;
+    firstName: string;
+}
+
+function calculateFirstNames(genders: Gender[]): FirstName[] {
+    return genders.map(gender => {
+        let namesData = gender.gender === 'Male' ? firstNameMData : firstNameFData;
+        
+        // Flatten the data to a simple array of names
+        let names = namesData.map((item: (string | number)[]) => item[1]);
+
+        let randomIndex = Math.floor(Math.random() * names.length);
+        let firstName = names[randomIndex];
+
+        return { employeeID: gender.employeeID, firstName: firstName };
+    });
+}
+
+interface MiddleName {
+    employeeID: number;
+    middleName: string;
+}
+
+function calculateMiddleNames(firstNames: FirstName[], genders: Gender[]): MiddleName[] {
+    return firstNames.map((firstNameItem, index) => {
+        let namesData = genders[index].gender === 'Male' ? firstNameMData : firstNameFData;
+
+        // Flatten the data to a simple array of names
+        let names = namesData.map((item: (string | number)[]) => item[1]);
+
+        let middleName;
+        do {
+            let randomIndex = Math.floor(Math.random() * names.length);
+            middleName = names[randomIndex];
+        } while(middleName === firstNameItem.firstName);
+
+        return { employeeID: firstNameItem.employeeID, middleName: middleName };
+    });
+}
+
+interface LastName {
+    employeeID: number;
+    lastName: string;
+}
+
+function calculateLastNames(startDates: StartDate[]): LastName[] {
+    // Flatten the data to a simple array of last names
+    let names = lastNamesData.map((item: (string | number)[]) => item[1]);
+
+    return startDates.map((startDateItem) => {
+        let randomIndex = Math.floor(Math.random() * names.length);
+        let lastName = names[randomIndex];
+
+        return { employeeID: startDateItem.employeeID, lastName: lastName };
+    });
+}
+
+interface Email {
+    employeeID: number;
+    email: string;
+}
+
+function calculateEmails(
+    firstNames: FirstName[], 
+    middleNames: MiddleName[], 
+    lastNames: LastName[]): Email[] {
+    
+    return firstNames.map((firstNameItem, index) => {
+        // Find the corresponding middle and last name for the current employee
+        let middleNameItem = middleNames.find(middleName => middleName.employeeID === firstNameItem.employeeID);
+        let lastNameItem = lastNames.find(lastName => lastName.employeeID === firstNameItem.employeeID);
+
+        // Create the email address
+        let email = `${firstNameItem.firstName}.${middleNameItem?.middleName}.${lastNameItem?.lastName}@company.com`.toLowerCase();
+
+        return { employeeID: firstNameItem.employeeID, email: email };
+    });
+}
+
+// Generate a random number with a normal distribution
+function getRandom(average: number, standardDeviation: number) {
+    let u1 = Math.random();
+    let u2 = Math.random();
+    let randStdNormal = Math.sqrt(-2.0 * Math.log(u1)) * Math.sin(2.0 * Math.PI * u2); //random normal distribution
+    let randNormal = average + standardDeviation * randStdNormal; //random normal distribution(mean,stdDeviation)
+    return randNormal;
+}
 
 // Send the employees to the server in batches
 const sendEmployeeDataToDatabase = async (allEmployees: Employee[], batchSize: number) => {
