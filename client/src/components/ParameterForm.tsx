@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { ParameterFormState, Employee } from '../types';
 import { generateEmployees, getEmployeeDataFromDatabase } from '../utils/employeeUtils';
+import seedrandom from 'seedrandom';
 
 /**
  * `ParameterForm` Component
@@ -17,6 +18,7 @@ const ParameterForm: React.FC<{ setEmployees: (employees: Employee[]) => void }>
     const initialState: ParameterFormState = {
         employeeCount: 0,
         limit: 0,
+        randomSeed: Math.floor(Math.random() * 1000000),
         // Add other form fields as needed
     };
 
@@ -39,6 +41,8 @@ const ParameterForm: React.FC<{ setEmployees: (employees: Employee[]) => void }>
         e.preventDefault();
 
         try {
+            
+            seedrandom(state.randomSeed.toString(), { global: true }); // Create a seeded random number generator
             const employeeCount = state.employeeCount; // Or however you're getting the count
             generateEmployees(employeeCount);
             //const {employeesPerYear, leavingEmployeesPerYear, newHiresPerYear} = await generateEmployees(employeeCount);
@@ -69,6 +73,10 @@ const ParameterForm: React.FC<{ setEmployees: (employees: Employee[]) => void }>
         <div>
 
             <form onSubmit={handleGenerate}>
+                <label>
+                    Random Seed:
+                    <input type="number" name="randomSeed" value={state.randomSeed} onChange={handleInputChange} />
+                </label>
                 <label>
                     Employee Count:
                     <input type="number" name="employeeCount" value={state.employeeCount} onChange={handleInputChange} />

@@ -10,7 +10,7 @@ const { faker } = require('@faker-js/faker');
  * and sets their start date to a Monday the correct number of years ago.
  * The new employee's other details are also generated and sent to the server to be added to the database.
  */
-export const generateEmployees = async (numEmployees: number): Promise<{employeesPerYear: any[], leavingEmployeesPerYear: any[], newHiresPerYear: any[]}> => {
+export const generateEmployees = async (numEmployees: number): Promise<void> => {
 
     //Calculates the number of employees every year, assuming that it tracks with the US population
     const employeesPerYear = calculateEmployeesPerYear(numEmployees, populationData);
@@ -22,15 +22,31 @@ export const generateEmployees = async (numEmployees: number): Promise<{employee
     const newHiresPerYear = calculateNewHiresPerYear(employeesPerYear, leavingEmployeesPerYear);
 
     //Calculate total number of hires
-    const totalHires = calculateTotalHires(newHiresPerYear, employeesPerYear);
+    const totalHires = calculateTotalHires(newHiresPerYear);
+
+    //Calculates the initial number of employees from the target year
+    let targetStartYear = 1950;
+    const initialEmployees = targetStartYearEmployees(employeesPerYear, targetStartYear);
+
+    // Calculate the start date of the initial employees. The employeeHalfLife is the number of years it takes for half of the employees to leave.
+    let employeeHalfLife = 5;
+    const startDatesInitial = calculateStartDateInitial(initialEmployees, targetStartYear, employeeHalfLife);
+
+    // Calculate the end dates of the initial employees
+    const endDatesInitial = calculateEndDatesInitial(targetStartYear, startDatesInitial, employeeHalfLife);
+
+    // Calculate the start date of the rest of the employees
+    let targetEndYear = 2100;
+    const startDatesAll = calculateStartDatesAll(newHiresPerYear, startDatesInitial, targetStartYear, targetEndYear);
+
+    // Calculate the end dates of all employees
+    const endDatesAll = calculateEndDatesAll(startDatesAll, employeeHalfLife, initialEmployees, endDatesInitial);
 
     // Array to hold all generated employees
     const allEmployees: Employee[] = [];
     
     // Generate a new employee
-    for (let i = 1; i <= totalHires; i++) {
-        
-        const startDate = calculateStartDate(i, totalHires);
+    for (let i = 1; i <= totalHires; i++) {        
 
         /**
          * Generate the new employee's details.
@@ -43,11 +59,11 @@ export const generateEmployees = async (numEmployees: number): Promise<{employee
         const newEmployee: Employee = {
             ID: i,
             Sex: faker.person.sex(),
-            FirstName: faker.name.firstName(),
-            MiddleName: faker.name.firstName(),
-            LastName: faker.name.lastName(),
+            FirstName: faker.person.firstName(),
+            MiddleName: faker.person.middleName(),
+            LastName: faker.person.lastName(),
             Email: faker.internet.email(),
-            StartDate: startDate.toISOString().split('T')[0],
+            StartDate: faker.date.past().toISOString().split('T')[0],
             PositionID: Math.ceil(Math.random() * 10),
             BranchID: Math.ceil(Math.random() * 10),
             SupervisorID: i === 1 ? null : Math.ceil(Math.random() * (i - 1)),
@@ -62,7 +78,6 @@ export const generateEmployees = async (numEmployees: number): Promise<{employee
     const batchSize = 100;
     await sendEmployeeDataToDatabase(allEmployees, batchSize);
 
-    return {employeesPerYear, leavingEmployeesPerYear, newHiresPerYear};
 };
 
 interface YearPopulationData {
@@ -96,11 +111,6 @@ interface YearLeavingEmployeesData {
     leavingEmployees: number;
 }
 
-interface YearNewHiresData {
-    year: number;
-    newHires: number;
-}
-
 //Calculates the number of employees leaving every year, assuming that 15% of employees leave every year
 const calculateLeavingEmployeesPerYear = (employeesPerYear: YearEmployeesData[]): YearLeavingEmployeesData[] => {
     return employeesPerYear.map((data) => {
@@ -109,6 +119,11 @@ const calculateLeavingEmployeesPerYear = (employeesPerYear: YearEmployeesData[])
             leavingEmployees: Math.round(data.employees * 0.15),
         };
     });
+}
+
+interface YearNewHiresData {
+    year: number;
+    newHires: number;
 }
 
 //Calculates the number of new hires every year, based on next year's employee count
@@ -132,33 +147,155 @@ const calculateNewHiresPerYear = (employeesPerYear: YearEmployeesData[], leaving
     });
 }
 
-//Calculate total number of hires
-const calculateTotalHires = (newHiresPerYear: YearNewHiresData[], employeesPerYear: YearEmployeesData[]): number => {
-    let totalHires = newHiresPerYear.reduce((total, data) => total + data.newHires, 0);
+// Calculate the initial number of employees from a given year
+const targetStartYearEmployees = (employeesPerYear: YearEmployeesData[], targetStartYear: number): number => {
+    let targetStartYearEmployees = employeesPerYear.find(data => data.year === targetStartYear)?.employees || 0;
+    
+    return targetStartYearEmployees;
+};
 
-    // Add initial number of employees from 1950
-    const initialEmployees = employeesPerYear.find(data => data.year === 1950)?.employees || 0;
-    totalHires += initialEmployees;
+//Calculate total number of hires
+const calculateTotalHires = (newHiresPerYear: YearNewHiresData[]): number => {
+    let totalHires = newHiresPerYear.reduce((total, data) => total + data.newHires, 0);
 
     return totalHires;
 }
 
-/**
-* Calculate the number of years the employee has been employed,
-* based on their position in the hiring order.
-*/
-const calculateStartDate = (employeeNumber: number, totalEmployees: number): Date => {
-    const yearsEmployed = (1/-0.17) * Math.log(employeeNumber / totalEmployees);
-    const daysEmployed = Math.floor(yearsEmployed * 365.25); 
-
-    let startDate = new Date();
-    startDate.setDate(startDate.getDate() - daysEmployed);
-
-    // Set the start date to a Monday the correct number of years ago
-    startDate = getPreviousMonday(startDate);
-
-    return startDate;
+interface StartDate {
+    employeeID: number;
+    startDate: Date;
 }
+
+/**
+ * Calculate the number of years the employee has been employed,
+ * based on their position in the hiring order.
+ */
+const calculateStartDateInitial = (initialEmployees: number, targetStartYear: number, employeeHalfLife: number): StartDate[] => {
+    let result: StartDate[] = [];
+
+    for (let i = 1; i <= initialEmployees; i++) {
+        // Calculate the number of years the employee has been employed, based on their position in the hiring order
+        var yearsEmployed = (employeeHalfLife/0.693) * Math.log(initialEmployees / i) + .05;
+        // Cap the number of years at 30
+        if (yearsEmployed > 30) {
+            yearsEmployed = 30;
+        }
+        
+        const daysEmployed = Math.round(yearsEmployed * 365.25);
+
+        let startDate = new Date(targetStartYear - 1, 11, 30);
+        startDate.setDate(startDate.getDate() - daysEmployed);
+
+        // Set the start date to a Monday the correct number of years ago
+        startDate = getPreviousMonday(startDate);
+
+        result.push({
+            employeeID: i,
+            startDate: startDate
+        });
+    }
+    return result;
+};
+
+interface EndDate {
+    employeeID: number;
+    endDate: Date;
+}
+
+/**
+ * Calculate the employee's end date, based on their start date.
+ */
+const calculateEndDatesInitial = (targetStartYear: number, startDates: StartDate[], employeeHalfLife: number): EndDate[] => {
+    let endDates: EndDate[] = [];
+    
+    for (let startDateItem of startDates) {
+
+        let yearsEmployed: number;
+        let targetDate = new Date(targetStartYear, 0, 1);  // January 1 of targetStartYear
+        let diffTime = Math.abs(targetDate.getTime() - startDateItem.startDate.getTime());
+        let diffYears = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 365));  // convert difference from milliseconds to years
+
+        do {
+            yearsEmployed = (employeeHalfLife / 0.693) * Math.log(1 / Math.random());
+        } while(yearsEmployed < diffYears || yearsEmployed > 40);
+
+        const daysEmployed = Math.round(yearsEmployed * 365.25);
+
+        // Create a new Date object to avoid mutating the original one
+        let endDate = new Date(startDateItem.startDate);
+        endDate.setDate(endDate.getDate() + daysEmployed);
+
+        endDates.push({
+            employeeID: startDateItem.employeeID,
+            endDate: endDate
+        });
+    }
+
+    return endDates;
+};
+
+// Calculate the start dates for new hires
+const calculateStartDatesAll = (newHiresPerYear: YearNewHiresData[], startDate: StartDate[], targetStartYear: number, targetEndYear: number): StartDate[] => {
+    for (let i = targetStartYear; i <= targetEndYear; i++) {
+        let firstMonday = firstMondayOfYear(i);
+        let newHiresThisYear = newHiresPerYear.find(data => data.year === i)?.newHires || 0;
+        if (newHiresThisYear === 0) {
+            break;
+        }
+        let newHiresThisWeek = Math.round(newHiresThisYear / 26);
+        let hiringDate = new Date(firstMonday); // Avoid mutating the original date
+        console.log(firstMonday, newHiresThisYear, newHiresThisWeek);
+
+        for (let j = 0; j < 26; j++) {
+            // Advance to the next hiring week once enough hires have been made in the current week
+            for (let k = 0; k < newHiresThisWeek; k++)  {
+                startDate.push({
+                    employeeID: startDate.length + 1,
+                    startDate: hiringDate
+                });
+            }
+            hiringDate.setDate(hiringDate.getDate() + 14);
+            console.log(startDate.length+1, hiringDate);         
+        }             
+    }
+    return startDate;
+};
+
+// Calculate the first Monday of the year
+function firstMondayOfYear(year: number): Date {
+    let date = new Date(year, 0, 1); // Start from January 1
+
+    // Check if January 1 is a Monday, if not, find the next Monday
+    while (date.getDay() !== 1) {
+        date.setDate(date.getDate() + 1);
+    }
+    return date;
+}
+
+// Calculate the end dates for all employees
+const calculateEndDatesAll = (startDates: StartDate[], employeeHalfLife: number, initialEmployees: number, endDatesInitial: EndDate[]): EndDate[] => {
+    // Begin calculation from the next employee after the initial employees
+    for (let i = initialEmployees; i < startDates.length; i++) {
+        let startDate = startDates[i];
+        let yearsEmployed: number;
+
+        do {
+            yearsEmployed = (employeeHalfLife / 0.693) * Math.log(1 / Math.random());
+        } while(yearsEmployed > 35);
+        const daysEmployed = Math.round(yearsEmployed * 365.25);
+
+        // Create a new Date object to avoid mutating the original one
+        let endDate = new Date(startDate.startDate);
+        endDate.setDate(endDate.getDate() + daysEmployed);
+
+        endDatesInitial.push({
+            employeeID: startDate.employeeID,
+            endDate: endDate
+        });
+    }
+
+    return endDatesInitial;
+};
 
 // Send the employees to the server in batches
 const sendEmployeeDataToDatabase = async (allEmployees: Employee[], batchSize: number) => {
@@ -199,7 +336,7 @@ export const getEmployeeDataFromDatabase = async (limit: number): Promise<Employ
 function getPreviousMonday(date: Date): Date {
     const day = date.getDay();
     if(day !== 1) { // Only adjust if not Monday
-        let diff = date.getDate() - day + (day === 0 ? -6:1); // adjust when day is Sunday
+        let diff = date.getDate() - day + (day === 0 ? 1 : 8); // adjust when day is Sunday
         return new Date(date.setDate(diff));
     }
     return date;

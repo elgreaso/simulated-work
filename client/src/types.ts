@@ -46,5 +46,6 @@ export interface EmployeeListProps {
 export interface ParameterFormState {
     employeeCount: number;
     limit: number;
+    randomSeed: number;
     //add more state properties here
 }
