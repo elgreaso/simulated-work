@@ -406,7 +406,7 @@ interface LastName {
 
 function calculateLastNames(startDates: StartDate[]): LastName[] {
     // Flatten the data to a simple array of last names
-    let names = lastNamesData.map((item: (string | number)[]) => item[1]);
+    let names = lastNamesData.map((item: (string | number)[]) => item[0]);
 
     return startDates.map((startDateItem) => {
         let randomIndex = Math.floor(Math.random() * names.length);
@@ -421,10 +421,7 @@ interface Email {
     email: string;
 }
 
-function calculateEmails(
-    firstNames: FirstName[], 
-    middleNames: MiddleName[], 
-    lastNames: LastName[]): Email[] {
+function calculateEmails(firstNames: FirstName[], middleNames: MiddleName[], lastNames: LastName[]): Email[] {
     
     return firstNames.map((firstNameItem, index) => {
         // Find the corresponding middle and last name for the current employee
