@@ -1,29 +1,15 @@
 // Import required modules
 import { Employee } from '../types';
 import * as math from 'mathjs';
-import hiresData from './hiresMonthlyData.json';
+import hiresData from './data/hires.json';
+import populationData from './data/population.json';
 
 /*-----------------------------------------------------------------------------*/
 
 // Import required data files for generating employee names
 const firstNameMData = require('./firstNameMData.json');
 const firstNameFData = require('./firstNameFData.json');
-const lastNamesData = require('./lastNamesData.json');
-
-/*-----------------------------------------------------------------------------*/
-
-/**
- * Interface YearPopulationData
- *
- * This interface represents the schema for year-wise population data. It's used to store population statistics for each year.
- * 
- * @param year       - This is the year for which the population is recorded.
- * @param population - The total population recorded in the corresponding year.
- */
-interface YearPopulationData {
-    year: number;
-    population: number;
-}
+var lastNamesData = require('./lastNamesData.json');
 
 /*-----------------------------------------------------------------------------*/
 
@@ -67,24 +53,26 @@ interface YearEmployeesData {
  * 
  * console.log(calculateEmployeesPerYear(numEmployees, populationData)); // Outputs: [{ year: 2021, employees: 9000 }, { year: 2022, employees: 9500 }, { year: 2023, employees: 10000 }]
  */
-const calculateEmployeesPerYear = (presentEmployees: number, populationData: YearPopulationData[]): YearEmployeesData[] => {
+export const calculateEmployeesPerYear = (presentEmployees: number, startYear: number, endYear: number): YearEmployeesData[] => {
     const currentYear = new Date().getFullYear();
     const populationThisYear = populationData.find((item) => item.year === currentYear)?.population || 0;
     const employeePercentOfPopulation = presentEmployees / populationThisYear;
 
-    const employeesPerYear = populationData.map((data) => {
-        return {
-            year: data.year,
-            employees: Math.round(data.population * employeePercentOfPopulation)
-        };
-    });
+    const employeesPerYear = populationData
+        .filter((data) => data.year >= startYear && data.year <= endYear)  // Filter out years outside the given range
+        .map((data) => {
+            return {
+                year: data.year,
+                employees: Math.round(data.population * employeePercentOfPopulation)
+            };
+        });
 
     return employeesPerYear;
 };
 
 /*-----------------------------------------------------------------------------*/
 
-const targetYearEmployees = (employeesPerYear: YearEmployeesData[], targetStartYear: number): number => {
+export const targetYearEmployees = (employeesPerYear: YearEmployeesData[], targetStartYear: number): number => {
     let targetYearEmployees = employeesPerYear.find(data => data.year === targetStartYear)?.employees || 0;
     
     return targetYearEmployees;
@@ -132,7 +120,7 @@ function getPreviousMonday(date: Date): Date {
  *
  * @returns An object containing the employeeID and their calculated start date.
  */
-const calculateInitialStartDate = (employeeID: number, initialEmployees: number, targetStartYear: number, employeeHalfLife: number): Date => {
+export const calculateInitialStartDate = (employeeID: number, initialEmployees: number, targetStartYear: number, employeeHalfLife: number): Date => {
     
     // Calculate the number of years the employee has been employed, based on their position in the hiring order, or a maximum of 30 years
     var yearsEmployed = Math.min((employeeHalfLife/0.693) * Math.log(initialEmployees / employeeID), 30);
@@ -166,7 +154,7 @@ const calculateInitialStartDate = (employeeID: number, initialEmployees: number,
  *
  * @returns A Date object representing the employee's end date.
  */
-const calculateEndDate = (simStartYear: number, employeeStartDate: Date, employeeHalfLife: number): Date => {
+export const calculateEndDate = (simStartYear: number, employeeStartDate: Date, employeeHalfLife: number): Date => {
     
     let yearsEmployed: number;
 
@@ -253,25 +241,19 @@ const calculateStartDatesForYear = (targetYear: number, numNewHires: number): Da
     // Explicitly tell TypeScript that hiresData is an array of HireData objects
     const hiresMonthlyData: HireData[] = hiresData;
 
-    // This creates an average of the average number of hires per month
+    // Create arrays of the average and standard deviation values from the hires data
     const avgValues = hiresMonthlyData.map((obj: HireData) => obj.avg);
-
-    // This creates an average of the standard deviation of the number of hires per month
     const stdevValues = hiresMonthlyData.map((obj: HireData) => obj.stdev);
 
-    // Calculate the average
+    // Calculate the average of the averages and convert the averages to a multiplier of the average
     const avgMean = math.mean(avgValues);
-
-    // Convert averages to a multiplier of the average
     const avgMultipliers = avgValues.map((avg: number) => avg / avgMean);
 
-    // Calculate the average standard deviation
+    // Calculate the average of the standard deviations and convert the standard deviations to a multiplier of the average
     const stdevMean = math.mean(stdevValues);
-
-    // Convert standard deviations to a multiplier of the average standard deviation
     const stdevMultipliers = stdevValues.map((stdev: number) => stdev / stdevMean);
 
-    // Calculate the number of new hires per two-week period (assuming 26 hiring periods in a year)
+    // Calculate the number of new hires per hiring period (assuming 26 hiring periods in a year)
     let numHiringRounds = 26;
     let avgNumHiredPerRound = newHiresThisYear / numHiringRounds;
     for (let i = 0; i < numHiringRounds; i++) {
@@ -293,7 +275,7 @@ const calculateStartDatesForYear = (targetYear: number, numNewHires: number): Da
         }
     }
 
-    // Return the updated start dates array
+    // Return the array of start dates for the target year
     return startDates;  
 
 }             
@@ -322,19 +304,6 @@ function firstMondayOfYear(year: number): Date {
     return date;
 }
 
-/**
- * Interface BirthDate
- *
- * This interface represents the schema for an employee's birth date. It's used to store the date when an employee was born.
- * 
- * @property employeeID - This is the unique identifier for the employee.
- * @property birthDate  - The birth date of the corresponding employee. This information could be used for things like age verification or birthday notifications.
- */
-interface BirthDate {
-    employeeID: number;
-    birthDate: Date;
-}
-
 /*-----------------------------------------------------------------------------*/
 
 /**
@@ -352,7 +321,7 @@ interface BirthDate {
  *
  * @returns A BirthDate object representing the employee's ID and their calculated birth date
  */
-const calculateBirthDate = (startDate: Date, avgStartAge: number, stdevStartAge: number): Date => {
+export const calculateBirthDate = (startDate: Date, avgStartAge: number, stdevStartAge: number): Date => {
     let employeeAge: number;
     do {
         employeeAge = getRandom(avgStartAge, stdevStartAge);
@@ -372,166 +341,166 @@ const calculateBirthDate = (startDate: Date, avgStartAge: number, stdevStartAge:
 /*-----------------------------------------------------------------------------*/
 
 /**
- * Function: calculateIndividualGender
+ * Function: calculateSex
  *
  * This function calculates the gender for an individual employee.
  * A simple random decision is used for the gender assignment, with a 50% chance for each gender.
  * 
- * @param employeeID - The ID of the employee for whom the gender is being calculated
+ * @param None
  * 
- * @returns A Gender object representing the employee's ID and their randomly assigned gender
+ * @returns A string containing the employee's gender
  */
-const calculateIndividualGender = (): string => {
+export const calculateSex = (): string => {
     // Use a random number to determine gender
-    const gender = Math.random() <= 0.5 ? 'Male' : 'Female';
+    const sex = Math.random() <= 0.5 ? 'Male' : 'Female';
 
-    // Return the gender object
-    return gender;
+    // Return the gender
+    return sex;
 };
 
 /*-----------------------------------------------------------------------------*/
 
-/**
- * Interface Name
- *
- * This interface represents the schema for storing the name data of employees. It is used to store the name of an employee.
- * 
- * @property employeeID - This is the unique identifier for the employee. 
- * @property name       - The name of the corresponding employee. It could be the first, middle, or last name based on the usage context.
- */
-interface Name {
-    employeeID: number;
+interface NameData {
+    year: number;
     name: string;
+    popularity: number;
+}
+
+export function calculateFirstName(sex: string, birthDate: Date): string {
+    // Select the names data based on the gender
+    let namesData: NameData[] = sex === 'Male' ? firstNameMData : firstNameFData;
+
+    // Get the birth year
+    let birthYear = birthDate.getFullYear();
+
+    // Filter the names data to include only names from the birth year
+    let namesFromBirthYear = namesData.filter((item: NameData) => item.year === birthYear);
+
+    // If there's no data for the birth year, return a default name
+    if (namesFromBirthYear.length === 0) {
+        return 'Default Name';
+    }
+
+    // Use a random index to select a name from the filtered list
+    let randomIndex = Math.floor(Math.random() * namesFromBirthYear.length);
+
+    // Return the randomly selected name
+    return namesFromBirthYear[randomIndex].name;
 }
 
 /*-----------------------------------------------------------------------------*/
 
-/**
- * Interface FirstName
- *
- * This interface represents the schema for storing the first name of employees. It is used to store the first name of an employee.
- * 
- * @property employeeID - This is the unique identifier for the employee. 
- * @property firstName  - The first name of the corresponding employee. It's the personal name that appears first in a person's full name.
- */
-interface FirstName {
-    employeeID: number;
-    firstName: string;
+export function calculateMiddleName(gender: string, birthDate: Date): string {
+    // Select the names data based on the gender
+    let namesData: NameData[] = gender === 'Male' ? firstNameMData : firstNameFData;
+
+    // Get the birth year
+    let birthYear = birthDate.getFullYear();
+
+    // Filter the names data to include only names from the birth year
+    let namesFromBirthYear = namesData.filter((item: NameData) => item.year === birthYear);
+
+    // If there's no data for the birth year, return a default name
+    if (namesFromBirthYear.length === 0) {
+        return 'Default Name';
+    }
+
+    // Use a random index to select a name from the filtered list
+    let randomIndex = Math.floor(Math.random() * namesFromBirthYear.length);
+
+    // Return the randomly selected name
+    return namesFromBirthYear[randomIndex].name;
 }
 
 /*-----------------------------------------------------------------------------*/
 
-/**
- * General function to calculate names, based on specific criteria.
- * @param genders - Array of gender data for each employee.
- * @param firstNames - Array of first names data for each employee. This parameter is used when calculating middle names.
- * @param nameCriterion - Function to decide the name, based on specific criteria.
- * @return Array of name data for each employee.
- */
-function calculateNames(gender: string, firstNames: FirstName[], nameCriterion: (names: string[], firstName: string) => string): Name[] {
-    return gender.map((gender, index) => {
-        // Select the names data based on the gender
-        let namesData = gender.gender === 'Male' ? firstNameMData : firstNameFData;
+interface LastNameData {
+    name: string;
+    rank: number;
+    pctwhite: number;
+    pctblack: number;
+    pctapi: number;
+    pctaian: number;
+    pct2prace: number;
+    pcthispanic: number;
+}
 
-        // Flatten the data to a simple array of names
-        let names = namesData.map((item: (string | number)[]) => item[1]);
+/*-----------------------------------------------------------------------------*/
 
-        // Use the provided criterion function to decide the name
-        let name = nameCriterion(names, firstNames[index]?.firstName);
-        
-        // Return a Name object
-        return { employeeID: gender.employeeID, name: name };
+export function calculateLastName(): string {
+    // Convert the lastNamesData array to include numeric values
+    lastNamesData = lastNamesData.map((item: any) => {
+        return {
+            ...item,
+            pctwhite: parseFloat(item.pctwhite),
+            pctblack: parseFloat(item.pctblack),
+            pctapi: parseFloat(item.pctapi),
+            pctaian: parseFloat(item.pctaian),
+            pct2prace: parseFloat(item.pct2prace),
+            pcthispanic: parseFloat(item.pcthispanic),
+        };
     });
+  
+    // Use a random index to select a name from the lastNamesData array
+    let randomIndex = Math.floor(Math.random() * lastNamesData.length);
+
+    // Get the selected name
+    let selectedName = lastNamesData[randomIndex].name;
+
+    // Convert the selected name to title case
+    let lastName = selectedName.charAt(0).toUpperCase() + selectedName.slice(1).toLowerCase();
+
+    // Return the selected last name
+    return lastName;
 }
 
 /*-----------------------------------------------------------------------------*/
 
-/**
- * General function to calculate a name, based on specific criteria.
- * @param employeeID - The ID of the employee for whom the name is being calculated.
- * @param namesData - The data set from which to choose a name.
- * @param nameCriterion - Function to decide the name, based on specific criteria.
- * @return A Name object for the given employee.
- */
-function calculateName(employeeID: number, namesData: any[], nameCriterion: (names: string[]) => string): Name {
-    // Flatten the data to a simple array of names
-    let names = namesData.map((item: (string)[]) => item[0]);
-
-    // Use the provided criterion function to decide the name
-    let name = nameCriterion(names);
-
-    // Return a Name object
-    return { employeeID: employeeID, name: name };
-}
-
-// Usage
-// Calculate last name for a single employee
-// let lastName = calculateName(employeeID, lastNamesData, getRandomName);
-
-/*-----------------------------------------------------------------------------*/
-
-/**
- * Function to get a random name from an array of names.
- * @param names - Array of names.
- * @return A randomly selected name.
- */
-const getRandomName = (names: string[]) => {
-    let randomIndex = Math.floor(Math.random() * names.length);
-    return names[randomIndex];
-}
-
-/*-----------------------------------------------------------------------------*/
-
-/**
- * Function to get a unique name from an array of names. The unique name should be different from the provided first name.
- * @param names - Array of names.
- * @param firstName - The first name that should be different from the unique name.
- * @return A unique name.
- */
-const getMiddleName = (names: string[], firstName: string) => {
-    let middleName;
-    // Keep generating random names until a unique one is found
-    do {
-        let randomIndex = Math.floor(Math.random() * names.length);
-        middleName = names[randomIndex];
-    } while(middleName === firstName);
-    return middleName;
-}
-
-/*-----------------------------------------------------------------------------*/
-
-/**
- * Interface Email
- *
- * This interface represents the schema for storing the email address of employees. It is used to store the email address of an employee.
- * 
- * @property employeeID - This is the unique identifier for the employee. 
- * @property email      - The email address of the corresponding employee. It's the official email address provided by the company or the one provided by the employee during their registration.
- */
-interface Email {
-    employeeID: number;
-    email: string;
-}
+// function weightedRand(spec) {
+//     var i, j, table = [];
+    
+//     // Find the smallest weight
+//     var smallestWeight = Math.min(...Object.values(spec));
+    
+//     // Invert the smallest weight to use as a scaling factor
+//     var scale = 1 / smallestWeight;
+  
+//     for (i in spec) {
+//       // Multiply the weight by the scale to get the count
+//       var count = spec[i] * scale;
+      
+//       // Push the outcome into the table the calculated number of times
+//       for (j = 0; j < count; j++) {
+//         table.push(i);
+//       }
+//     }
+  
+//     return function() {
+//       return table[Math.floor(Math.random() * table.length)];
+//     }
+//   }
 
 /*-----------------------------------------------------------------------------*/
 
 /**
  * Generates a standard company email address for a given employee based on their names.
  * 
- * @param employeeID - The ID of the employee for whom the email is being generated.
  * @param firstName - The employee's first name.
  * @param middleName - The employee's middle name.
  * @param lastName - The employee's last name.
  * 
  * @return An Email object containing the employee's ID and their generated email address.
  */
-const calculateIndividualEmail = (employeeID: number, firstName: string, middleName: string, lastName: string): Email => {
+export const calculateEmail = (firstName: string, middleName: string, lastName: string): string => {
+
+    let middleInitial = middleName.charAt(0);
+    let domain = 'company.com';
 
     // Create the email address, converting all letters to lower case as is standard for email addresses.
-    let email = `${firstName}.${middleName}.${lastName}@company.com`.toLowerCase();
+    let email = `${firstName}.${middleInitial}.${lastName}@${domain}`.toLowerCase();
 
     // Return an Email object for this employee.
-    return { employeeID: employeeID, email: email };
+    return email;
 };
 
 /*-----------------------------------------------------------------------------*/

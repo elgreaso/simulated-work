@@ -1,5 +1,5 @@
 import { Employee } from '../types';
-import populationData from './populationData.json';
+import populationData from './data/population.json';
 import seedrandom from 'seedrandom';
 
 /**
@@ -354,9 +354,9 @@ function calculateGenders(birthDates: BirthDate[]): Gender[] {
     });
 }
 
-const firstNameMData = require('./firstNameMData.json');
-const firstNameFData = require('./firstNameFData.json');
-const lastNamesData = require('./lastNamesData.json');
+const firstNameMData = require('./data/firstNameM.json');
+const firstNameFData = require('./data/firstNameF.json');
+const lastNamesData = require('./data/lastName.json');
 
 interface FirstName {
     employeeID: number;

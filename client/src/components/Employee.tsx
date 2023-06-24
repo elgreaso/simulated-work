@@ -6,7 +6,6 @@ interface EmployeeProps {
 }
 
 const Employee: React.FC<EmployeeProps> = ({ employee }) => {
-  console.log(employee); // Debug: check the data received from the server
   return (
     <div>
       <h2>{employee.FirstName} {employee.MiddleName} {employee.LastName}</h2>
