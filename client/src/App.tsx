@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import EmployeeList from './components/EmployeeList';
 import ParameterForm from './components/ParameterForm'; // Import the ParameterForm
-import { getEmployeeDataFromDatabase } from './utils/employeeUtils';
+import { getEmployeeDataFromDatabase } from './utils/databaseUtils';
 import { Employee } from './types';  // Import the Employee interface
 
 function App() {

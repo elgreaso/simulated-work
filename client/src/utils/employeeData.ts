@@ -3,13 +3,14 @@ import { Employee } from '../types';
 import * as math from 'mathjs';
 import hiresData from './data/hires.json';
 import populationData from './data/population.json';
+import { getYear, addDays, differenceInDays } from 'date-fns';
 
 /*-----------------------------------------------------------------------------*/
 
 // Import required data files for generating employee names
-const firstNameMData = require('./firstNameMData.json');
-const firstNameFData = require('./firstNameFData.json');
-var lastNamesData = require('./lastNamesData.json');
+const firstNameMData = require('./data/firstNameM.json');
+const firstNameFData = require('./data/firstNameF.json');
+var lastNamesData = require('./data/lastName.json');
 
 /*-----------------------------------------------------------------------------*/
 
@@ -107,42 +108,6 @@ function getPreviousMonday(date: Date): Date {
 /*-----------------------------------------------------------------------------*/
 
 /**
- * Function: calculateInitialStartDate
- *
- * This function calculates the start dates of employees present at the start of the simulation.
- * The number of years the employee has been employed is based on their position in the hiring order,
- * and the start date is set to a Monday the correct number of years ago.
- *
- * @param employeeID        - The ID of the employee (also represents the order in which they were hired)
- * @param initialEmployees  - The total number of employees at the beginning of the simulation
- * @param targetStartYear   - The start year of the simulation
- * @param employeeHalfLife  - The number of years it takes for half of the employees to leave
- *
- * @returns An object containing the employeeID and their calculated start date.
- */
-export const calculateInitialStartDate = (employeeID: number, initialEmployees: number, targetStartYear: number, employeeHalfLife: number): Date => {
-    
-    // Calculate the number of years the employee has been employed, based on their position in the hiring order, or a maximum of 30 years
-    var yearsEmployed = Math.min((employeeHalfLife/0.693) * Math.log(initialEmployees / employeeID), 30);
-    
-    // Convert the number of years employed to the number of days employed
-    const daysEmployed = Math.round(yearsEmployed * 365.25);
-    
-    // Create a new Date object representing the day prior to the target start year
-    let startDate = new Date(targetStartYear - 1, 11, 30);
-    
-    // Subtract the number of days employed from the start date to get the employee's start date
-    startDate.setDate(startDate.getDate() - daysEmployed);
-    
-    // Adjust the start date to the previous Monday
-    startDate = getPreviousMonday(startDate);
-
-    // Return the employee's ID and start date as an object
-    return startDate;
-};
-/*-----------------------------------------------------------------------------*/
-
-/**
  * Function: calculateEndDate
  *
  * This function calculates the end date of an employee given their start date and the employee half-life.
@@ -174,6 +139,56 @@ export const calculateEndDate = (simStartYear: number, employeeStartDate: Date, 
 
     // Return the employee's end date as a Date object
     return endDate;
+}
+
+/*-----------------------------------------------------------------------------*/
+
+/**
+ * Function: calculateInitialStartDate
+ *
+ * This function calculates the start dates of employees present at the start of the simulation.
+ * The number of years the employee has been employed is based on their position in the hiring order,
+ * and the start date is set to a Monday the correct number of years ago.
+ *
+ * @param employeeID        - The ID of the employee (also represents the order in which they were hired)
+ * @param initialEmployees  - The total number of employees at the beginning of the simulation
+ * @param targetStartYear   - The start year of the simulation
+ * @param employeeHalfLife  - The number of years it takes for half of the employees to leave
+ *
+ * @returns An object containing the employeeID and their calculated start date.
+ */
+// Creates an array of start dates for the initial employees
+export const calculateInitialStartDates = (employeesPerYear: YearEmployeesData[], simStartYear: number, employeeHalfLife: number): Date[] => {
+    
+    // Find the number of employees present at the start of the simulation
+    let numStartYearEmployees: number = targetYearEmployees(employeesPerYear, simStartYear);
+
+    // Set the start date of the simulation to the first day of the year
+    let simStartDate: Date = new Date(simStartYear, 0, 1);
+
+    // Create an array to store the start dates of the initial employees
+    let initialStartDates: Date[] = new Array<Date>(numStartYearEmployees);
+
+    // Calculate the start date of each employee
+    for(let i = 0; i < numStartYearEmployees; i++) {
+        let daysEmployed: number;
+        let endDate: Date;
+
+        // The number of days employed must be within the valid range
+        do {
+            endDate = calculateEndDate(simStartYear, simStartDate, employeeHalfLife);
+            daysEmployed = differenceInDays(simStartDate, endDate);
+        } while(daysEmployed < 1 || daysEmployed > 30 * 365.25);
+
+        // Subtract the number of days employed from the start date to get the initial start date
+        let initialStartDate = addDays(simStartDate, -daysEmployed);
+
+        // Set the initial start date to the previous Monday
+        initialStartDates[i] = getPreviousMonday(initialStartDate);
+    }
+
+    // Return the array of initial start dates
+    return initialStartDates;
 }
 
 /*-----------------------------------------------------------------------------*/

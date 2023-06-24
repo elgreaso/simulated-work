@@ -1,7 +1,8 @@
 //Create the ParameterForm component
 import React, { useState } from 'react';
 import { ParameterFormState, Employee } from '../types';
-import { generateEmployees, getEmployeeDataFromDatabase } from '../utils/employeeUtils';
+import { generateEmployees } from '../utils/employeeGenerate';
+import { getEmployeeDataFromDatabase } from '../utils/databaseUtils';
 
 
 /**

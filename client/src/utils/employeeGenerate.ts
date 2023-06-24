@@ -9,7 +9,7 @@ import * as employeeData from './employeeData'
  * and sets their start date to a Monday the correct number of years ago.
  * The new employee's other details are also generated and sent to the server to be added to the database.
  */
-export const generateEmployees = async (numEmployees: number, startYear: number, endYear: number, employeeHalfLife: number): Promise<void> => {
+export const generateEmployees = async (numEmployees: number, simStartYear: number, simEndYear: number, employeeHalfLife: number): Promise<void> => {
 
     // Stuff to put in the parameter form:
     let avgStartAge = 25;
@@ -20,14 +20,16 @@ export const generateEmployees = async (numEmployees: number, startYear: number,
     let seed = 'mySeed';
     seedrandom(seed, { global: true });
 
-    const employeesPerYear = employeeData.calculateEmployeesPerYear(numEmployees, startYear, endYear);
+    const employeesPerYear = employeeData.calculateEmployeesPerYear(numEmployees, simStartYear, simEndYear);
+    const initialStartDates = employeeData.calculateInitialStartDates(employeesPerYear, simStartYear, employeeHalfLife);
 
     let employees: Employee[] = [];
-    for (let year = startYear; year <= endYear; year++) {
+    for (let year = simStartYear; year <= simEndYear; year++) {
         let yearEmployees = employeeData.targetYearEmployees(employeesPerYear, year);
         console.log(year);
-        for (let i = 0; i < yearEmployees; i++) {
-            let startDate = employeeData.calculateInitialStartDate(employees.length, yearEmployees, year, employeeHalfLife);
+        for (let i = 0; i < numNewHires; i++) {
+            let iD = employees.length;
+            let startDate = employeeData.calculateStartDatesForYear(simStartYear, numNewHires);
             let endDate = employeeData.calculateEndDate(year, startDate, employeeHalfLife);
             let sex = employeeData.calculateSex();
             let birthDate = employeeData.calculateBirthDate(startDate, avgStartAge, stdevStartAge);
@@ -41,7 +43,7 @@ export const generateEmployees = async (numEmployees: number, startYear: number,
             let status = "Removed";
 
             let employee: Employee = {
-                ID: employees.length,
+                ID: iD,
                 StartDate: startDate.getTime(),
                 EndDate: endDate.getTime(),
                 DOB: birthDate.getTime(),
