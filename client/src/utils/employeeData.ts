@@ -1,16 +1,16 @@
 // Import required modules
-import { Employee } from '../types';
 import * as math from 'mathjs';
 import hiresData from './data/hires.json';
 import populationData from './data/population.json';
-import { getYear, addDays, differenceInDays } from 'date-fns';
+import { addDays, differenceInDays } from 'date-fns';
+import { WeightedRandomSelector } from './generateLUTs';
 
 /*-----------------------------------------------------------------------------*/
 
 // Import required data files for generating employee names
-const firstNameMData = require('./data/firstNameM.json');
-const firstNameFData = require('./data/firstNameF.json');
-var lastNamesData = require('./data/lastName.json');
+import firstNameMData from './lut/firstNameMLUT.json';
+import firstNameFData from './lut/firstNameFLUT.json';
+import lastNameData from './data/lastName.json';
 
 /*-----------------------------------------------------------------------------*/
 
@@ -67,7 +67,6 @@ export const calculateEmployeesPerYear = (presentEmployees: number, startYear: n
                 employees: Math.round(data.population * employeePercentOfPopulation)
             };
         });
-
     return employeesPerYear;
 };
 
@@ -119,14 +118,12 @@ function getPreviousMonday(date: Date): Date {
  *
  * @returns A Date object representing the employee's end date.
  */
-export const calculateEndDate = (simStartYear: number, employeeStartDate: Date, employeeHalfLife: number): Date => {
+export const calculateEndDate = (employeeStartDate: Date, employeeHalfLife: number): Date => {
     
     let yearsEmployed: number;
 
     // Generate a random number of years employed that is within the valid range
-    do {
-        yearsEmployed = (employeeHalfLife / 0.693) * Math.log(1 / Math.random());
-    } while(employeeStartDate.getFullYear() + yearsEmployed < simStartYear || yearsEmployed > 35);
+    yearsEmployed = Math.min((-employeeHalfLife / Math.log(2)) * Math.log(Math.random()), 30);
 
     // Convert the number of years employed to the number of days employed
     const daysEmployed = Math.round(yearsEmployed * 365.25);
@@ -143,72 +140,80 @@ export const calculateEndDate = (simStartYear: number, employeeStartDate: Date, 
 
 /*-----------------------------------------------------------------------------*/
 
-/**
- * Function: calculateInitialStartDate
- *
- * This function calculates the start dates of employees present at the start of the simulation.
- * The number of years the employee has been employed is based on their position in the hiring order,
- * and the start date is set to a Monday the correct number of years ago.
- *
- * @param employeeID        - The ID of the employee (also represents the order in which they were hired)
- * @param initialEmployees  - The total number of employees at the beginning of the simulation
- * @param targetStartYear   - The start year of the simulation
- * @param employeeHalfLife  - The number of years it takes for half of the employees to leave
- *
- * @returns An object containing the employeeID and their calculated start date.
- */
-// Creates an array of start dates for the initial employees
-export const calculateInitialStartDates = (employeesPerYear: YearEmployeesData[], simStartYear: number, employeeHalfLife: number): Date[] => {
-    
-    // Find the number of employees present at the start of the simulation
-    let numStartYearEmployees: number = targetYearEmployees(employeesPerYear, simStartYear);
-
-    // Set the start date of the simulation to the first day of the year
-    let simStartDate: Date = new Date(simStartYear, 0, 1);
-
-    // Create an array to store the start dates of the initial employees
-    let initialStartDates: Date[] = new Array<Date>(numStartYearEmployees);
-
-    // Calculate the start date of each employee
-    for(let i = 0; i < numStartYearEmployees; i++) {
-        let daysEmployed: number;
-        let endDate: Date;
-
-        // The number of days employed must be within the valid range
-        do {
-            endDate = calculateEndDate(simStartYear, simStartDate, employeeHalfLife);
-            daysEmployed = differenceInDays(simStartDate, endDate);
-        } while(daysEmployed < 1 || daysEmployed > 30 * 365.25);
-
-        // Subtract the number of days employed from the start date to get the initial start date
-        let initialStartDate = addDays(simStartDate, -daysEmployed);
-
-        // Set the initial start date to the previous Monday
-        initialStartDates[i] = getPreviousMonday(initialStartDate);
-    }
-
-    // Return the array of initial start dates
-    return initialStartDates;
+interface EmploymentDates {
+    startDate: Date;
+    endDate: Date;
 }
 
 /*-----------------------------------------------------------------------------*/
 
-function yearNewHires(employeesPerYear: YearEmployeesData[], depthOfMA: number, targetYear: number, endDatesPerYear: YearEmployeesData[]): number {
-    // Find the number of employees for the target year
-    let thisYearEmployees = targetYearEmployees(employeesPerYear, targetYear);
+// Returns an array of start dates and end dates for the initial employees
+export const calculateInitialDates = (employeesPerYear: YearEmployeesData[], simStartYear: number, employeeHalfLife: number): [EmploymentDates[], Record<number, number>] => {
+    let numStartYearEmployees: number = targetYearEmployees(employeesPerYear, simStartYear);
+    let simStartDate: Date = new Date(simStartYear, 0, 1);
+
+    // Initialize an empty object to store end date counts
+    const endDatesCount: Record<number, number> = {};
+
+    // We will store our dates in an array of objects, where each object contains a start and end date
+    let initialDates: Array<EmploymentDates> = [];
+
+    for(let i = 0; i < numStartYearEmployees; i++) {
+        let currentDaysEmployed: number;
+        let totalDaysEmployed: number;
+        let endDate: Date;
+
+        // The number of days employed must be within the valid range
+        do {
+            endDate = calculateEndDate(simStartDate, employeeHalfLife);
+            totalDaysEmployed = Math.abs(differenceInDays(simStartDate, endDate));
+        } while(totalDaysEmployed < 1 || totalDaysEmployed > 30 * 365.25);
+
+        //Calculate where the sim start date is in relation to the employee's total employment
+        let randomFactor = Math.random();
+        randomFactor = (randomFactor === 0) ? 0.00001 : randomFactor; // Avoid division by zero
+        currentDaysEmployed = totalDaysEmployed * Math.min((-employeeHalfLife / Math.log(2)) * Math.log(Math.random()), 30) / 30;
+
+        // Subtract the number of days employed from the start date to get the initial start date
+        let initialStartDate = addDays(simStartDate, -currentDaysEmployed);
+
+        // Set the initial start date to the previous Monday
+        initialStartDate = getPreviousMonday(initialStartDate);
+        
+        // Set the initial end date based on the start date and days employed
+        endDate = addDays(initialStartDate, totalDaysEmployed + 7);
+        // Store these in our array of objects
+        initialDates.push({
+            startDate: initialStartDate,
+            endDate: endDate
+        });
+
+        // Increase the count for the end date's year
+        const endYear = endDate.getFullYear();
+        if (endDatesCount[endYear]) {
+            endDatesCount[endYear]++;
+        } else {
+            endDatesCount[endYear] = 1;
+        }
+    }
+
+    // Sort the dates by the start date
+    return [initialDates, endDatesCount];
+}
+
+/*-----------------------------------------------------------------------------*/
+
+export function yearNewHires(employeesPerYear: YearEmployeesData[], thisYearEmployees: number, depthOfMA: number, currentYear: number, endDatesCount: Record<number, number>): number {
 
     // Find the number of employees for the next year
-    let nextYearEmployees = targetYearEmployees(employeesPerYear, targetYear + 1);
+    let nextYearEmployees = targetYearEmployees(employeesPerYear, currentYear + 1);
 
     // Project the number of employees leaving in the target year, based on the moving average of the previous years
     let endDatesSum: number = 0;
     for(let i = 0; i < depthOfMA; i++) {
-        let targetData = endDatesPerYear.find(data => data.year === targetYear + i);
-        if (targetData) {
-            endDatesSum += targetData.employees;
-        }
+        endDatesSum += endDatesCount[currentYear - i - 1] || 0;
     }
-    let projectedEndDates = endDatesSum / depthOfMA;
+    let projectedEndDates = Math.round(endDatesSum / depthOfMA);
 
     // Calculate the number of new hires in the target year, or 0 if the number is negative
     let yearNewHires = Math.max(nextYearEmployees - thisYearEmployees + projectedEndDates, 0);
@@ -240,13 +245,13 @@ interface HireData {
  *
  * @returns The updated array of start dates with the newly hired employees' start dates for the target year added
  */
-const calculateStartDatesForYear = (targetYear: number, numNewHires: number): Date[] => {
+export const calculateStartDatesForYear = (thisYear: number, numHires: number): Date[] => {
 
     // Find the first Monday of the target year
-    let firstMonday = firstMondayOfYear(targetYear);
+    let firstMonday = firstMondayOfYear(thisYear);
     
     let startDates: Date[] = [];
-    let newHiresThisYear = numNewHires;
+    let newHiresThisYear = numHires;
     
     // If there are no new hires this year, there's no need to continue, return the unchanged start dates array
     if (newHiresThisYear === 0) {
@@ -273,27 +278,49 @@ const calculateStartDatesForYear = (targetYear: number, numNewHires: number): Da
     let avgNumHiredPerRound = newHiresThisYear / numHiringRounds;
     for (let i = 0; i < numHiringRounds; i++) {
         // Use a new Date object to avoid mutating the original date
-        let hiringDate = new Date(firstMonday.getDate() + (i * 14));
+        let hiringDate = new Date(firstMonday);
+        hiringDate = addDays(hiringDate, i * 14);
         let hiringMonth = hiringDate.getMonth();
 
         // Calculate the average number of new hires for this two-week period, based on the month
         let randomAvg = avgMultipliers[hiringMonth] * avgNumHiredPerRound;
 
         // Calculate the average standard deviation for this two-week period, based on the month
-        let randomStdev = stdevMultipliers[hiringMonth] * stdevMean;
+        let randomStdev = stdevMultipliers[hiringMonth] * avgNumHiredPerRound;
 
         // Calculate the number of new hires for this two-week period
-        let newHiresThisRound = getRandom(randomAvg, randomStdev);
+        let newHiresThisRound = Math.round(getRandom(randomAvg, randomStdev));
 
-        for (let j = 0; j < newHiresThisRound; j++) {
+        let j = 0;
+        while (j < newHiresThisRound) {
+            // Add the hiring date to the array of start dates
+            startDates.push(new Date(hiringDate));
+            j++;
+        }
+
+        if (startDates.length >= newHiresThisYear) {
+            break;
+        }
+        
+    }        
+    // Calculate the total hires so far
+    let totalHiresSoFar = startDates.length;
+
+    // If total hires so far is less than the target hires, add hires on the last day
+    if (totalHiresSoFar < numHires) {
+        let hiringDate = new Date(firstMonday.getTime() + ((numHiringRounds - 1) * 14 * 24 * 60 * 60 * 1000));
+        for (let i = totalHiresSoFar; i < numHires; i++) {
             startDates.push(hiringDate);
         }
+    } 
+    // If total hires so far is more than the target hires, remove excess hires from the last day
+    else if (totalHiresSoFar > numHires) {
+        startDates.length = numHires;
     }
 
     // Return the array of start dates for the target year
-    return startDates;  
-
-}             
+    return startDates;
+}
 
 /*-----------------------------------------------------------------------------*/
 
@@ -340,12 +367,11 @@ export const calculateBirthDate = (startDate: Date, avgStartAge: number, stdevSt
     let employeeAge: number;
     do {
         employeeAge = getRandom(avgStartAge, stdevStartAge);
-    } while(employeeAge < 18 || startDate.getFullYear() - employeeAge > 65);
+    } while(employeeAge < 18 || employeeAge > 65);
 
     // Calculate the birth date by subtracting the generated age from the start date
     let birthDate = new Date(startDate);
     birthDate.setFullYear(birthDate.getFullYear() - employeeAge);
-    
     // Add or subtract a random number of days (between -180 and 180) from the birth date
     let randomDay = Math.floor(Math.random() * 361) - 180; // generates random number between -180 and 180
     birthDate.setDate(birthDate.getDate() + randomDay);
@@ -381,120 +407,102 @@ interface NameData {
     popularity: number;
 }
 
+// Load the precomputed lookup tables from JSON files
+//let firstNameMLUT = loadJsonData('./lut/firstNameMLUT.json');
+//let firstNameFLUT = loadJsonData('./lut/firstNameFLUT.json');
+
 export function calculateFirstName(sex: string, birthDate: Date): string {
-    // Select the names data based on the gender
-    let namesData: NameData[] = sex === 'Male' ? firstNameMData : firstNameFData;
+    // Select the LUT based on the gender
+    let lutByYear: { [key: number]: any } = sex === 'Male' ? firstNameMData : firstNameFData;
 
     // Get the birth year
     let birthYear = birthDate.getFullYear();
 
-    // Filter the names data to include only names from the birth year
-    let namesFromBirthYear = namesData.filter((item: NameData) => item.year === birthYear);
+    // Retrieve the lookup table for the birth year
+    let lut = lutByYear[birthYear];
 
-    // If there's no data for the birth year, return a default name
-    if (namesFromBirthYear.length === 0) {
+    // If there's no LUT for the birth year, return a default name
+    if (!lut) {
         return 'Default Name';
     }
 
-    // Use a random index to select a name from the filtered list
-    let randomIndex = Math.floor(Math.random() * namesFromBirthYear.length);
+    // Create a weighted random selector with the LUT for the birth year
+    let selector = new WeightedRandomSelector([], 0, 0);
+    selector.aliasTable = lut.aliasTable;
+    selector.outcomes = lut.outcomes;
 
-    // Return the randomly selected name
-    return namesFromBirthYear[randomIndex].name;
+    // Use the weighted random selector to draw a random name
+    return selector.drawRandomOutcome();
 }
 
 /*-----------------------------------------------------------------------------*/
 
-export function calculateMiddleName(gender: string, birthDate: Date): string {
-    // Select the names data based on the gender
-    let namesData: NameData[] = gender === 'Male' ? firstNameMData : firstNameFData;
+export function calculateMiddleName(sex: string, birthDate: Date, firstName: string): string {
+    // Select the LUT based on the gender
+    let lutByYear: { [key: number]: any } = sex === 'Male' ? firstNameMData : firstNameFData;
 
     // Get the birth year
     let birthYear = birthDate.getFullYear();
 
-    // Filter the names data to include only names from the birth year
-    let namesFromBirthYear = namesData.filter((item: NameData) => item.year === birthYear);
+    // Retrieve the lookup table for the birth year
+    let lut = lutByYear[birthYear];
 
-    // If there's no data for the birth year, return a default name
-    if (namesFromBirthYear.length === 0) {
+    // If there's no LUT for the birth year, return a default name
+    if (!lut) {
         return 'Default Name';
     }
 
-    // Use a random index to select a name from the filtered list
-    let randomIndex = Math.floor(Math.random() * namesFromBirthYear.length);
+    // Create a weighted random selector with the LUT for the birth year
+    let selector = new WeightedRandomSelector([], 0, 0);
+    selector.aliasTable = lut.aliasTable;
+    selector.outcomes = lut.outcomes;
 
-    // Return the randomly selected name
-    return namesFromBirthYear[randomIndex].name;
+    // Use the weighted random selector to draw a random name
+    let middleName = selector.drawRandomOutcome();
+
+    // Keep drawing a name until it is different from the first name
+    while (middleName === firstName) {
+        middleName = selector.drawRandomOutcome();
+    }
+
+    return middleName;
 }
 
 /*-----------------------------------------------------------------------------*/
 
-interface LastNameData {
-    name: string;
-    rank: number;
-    pctwhite: number;
-    pctblack: number;
-    pctapi: number;
-    pctaian: number;
-    pct2prace: number;
-    pcthispanic: number;
-}
+// interface LastNameData {
+//     name: string;
+//     rank: number;
+//     pctwhite: number;
+//     pctblack: number;
+//     pctapi: number;
+//     pctaian: number;
+//     pct2prace: number;
+//     pcthispanic: number;
+// }
 
 /*-----------------------------------------------------------------------------*/
 
-export function calculateLastName(): string {
     // Convert the lastNamesData array to include numeric values
-    lastNamesData = lastNamesData.map((item: any) => {
-        return {
-            ...item,
-            pctwhite: parseFloat(item.pctwhite),
-            pctblack: parseFloat(item.pctblack),
-            pctapi: parseFloat(item.pctapi),
-            pctaian: parseFloat(item.pctaian),
-            pct2prace: parseFloat(item.pct2prace),
-            pcthispanic: parseFloat(item.pcthispanic),
-        };
-    });
-  
-    // Use a random index to select a name from the lastNamesData array
-    let randomIndex = Math.floor(Math.random() * lastNamesData.length);
-
-    // Get the selected name
-    let selectedName = lastNamesData[randomIndex].name;
-
-    // Convert the selected name to title case
-    let lastName = selectedName.charAt(0).toUpperCase() + selectedName.slice(1).toLowerCase();
-
-    // Return the selected last name
-    return lastName;
-}
-
-/*-----------------------------------------------------------------------------*/
-
-// function weightedRand(spec) {
-//     var i, j, table = [];
+    // lastNamesData = lastNamesData.map((item: any) => {
+    //     return {
+    //         ...item,
+    //         pctwhite: parseFloat(item.pctwhite),
+    //         pctblack: parseFloat(item.pctblack),
+    //         pctapi: parseFloat(item.pctapi),
+    //         pctaian: parseFloat(item.pctaian),
+    //         pct2prace: parseFloat(item.pct2prace),
+    //         pcthispanic: parseFloat(item.pcthispanic),
+    //     };
+    // });
+export const calculateLastName = (): string => {
+    // Pick a random index
+    const randomIndex = Math.floor(Math.random() * lastNameData.length);
     
-//     // Find the smallest weight
-//     var smallestWeight = Math.min(...Object.values(spec));
-    
-//     // Invert the smallest weight to use as a scaling factor
-//     var scale = 1 / smallestWeight;
-  
-//     for (i in spec) {
-//       // Multiply the weight by the scale to get the count
-//       var count = spec[i] * scale;
+    // Return the last name at the random index
+    return String(lastNameData[randomIndex][0]);
+};
       
-//       // Push the outcome into the table the calculated number of times
-//       for (j = 0; j < count; j++) {
-//         table.push(i);
-//       }
-//     }
-  
-//     return function() {
-//       return table[Math.floor(Math.random() * table.length)];
-//     }
-//   }
-
 /*-----------------------------------------------------------------------------*/
 
 /**
@@ -545,61 +553,3 @@ function getRandom(average: number, standardDeviation: number) {
 
 /*-----------------------------------------------------------------------------*/
 
-/**
- * Asynchronously send employee data to a database server in smaller batches.
- * 
- * The purpose of sending in batches is to avoid overwhelming the server with too much data at once. 
- * This function loops through the entire list of employees and sends a batch to the server at each iteration.
- * The size of the batch is determined by the batchSize parameter.
- *
- * If the server's response indicates an error (response.ok is false), the function throws an error with the response status.
- *
- * @param allEmployees - An array containing all employee data.
- * @param batchSize - The number of employees to be sent to the server in each batch.
- * 
- * @throws Will throw an error if the server response indicates an unsuccessful request.
- */
-const sendEmployeeDataToDatabase = async (allEmployees: Employee[], batchSize: number) => {
-    for (let i = 0; i < allEmployees.length; i += batchSize) {
-        const batch = allEmployees.slice(i, i + batchSize);
-
-        const response = await fetch('http://localhost:3001/api/employees', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(batch)
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-    }
-};
-
-/*-----------------------------------------------------------------------------*/
-
-/**
- * Asynchronously fetch employee data from a database server.
- * 
- * This function sends a GET request to the server to retrieve employee data.
- * The number of employee records retrieved is determined by the limit parameter.
- * If the server's response indicates an error (response.ok is false), the function throws an error with the response status.
- * If the server's response indicates success, the function returns the parsed employee data.
- *
- * @param limit - The maximum number of employee records to retrieve from the server. Defaults to 100 if not specified.
- * 
- * @return A promise that resolves to an array of Employee objects.
- * 
- * @throws Will throw an error if the server response indicates an unsuccessful request.
- */
-export const getEmployeeDataFromDatabase = async (limit: number = 100): Promise<Employee[]> => {
-    const response = await fetch(`http://localhost:3001/api/employees?limit=${limit}`);
-
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-    } else {
-        const employees: Employee[] = await response.json();
-        return employees;
-    }
-};

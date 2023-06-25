@@ -1,7 +1,9 @@
 import { Employee } from '../types';
-import populationData from './data/population.json';
 import seedrandom from 'seedrandom';
 import * as employeeData from './employeeData'
+import { sendEmployeeDataToDatabase } from './databaseUtils';
+import { start } from 'repl';
+import { targetYearEmployees } from './employeeData';
 
 /**
  * This function generates new employees.
@@ -14,79 +16,73 @@ export const generateEmployees = async (numEmployees: number, simStartYear: numb
     // Stuff to put in the parameter form:
     let avgStartAge = 25;
     let stdevStartAge = 5;
-
-
+    let depthOfMA = 3;
 
     let seed = 'mySeed';
-    seedrandom(seed, { global: true });
+    //seedrandom(seed, { global: true });
 
+    // Calculate the expected number of employees per year
     const employeesPerYear = employeeData.calculateEmployeesPerYear(numEmployees, simStartYear, simEndYear);
-    const initialStartDates = employeeData.calculateInitialStartDates(employeesPerYear, simStartYear, employeeHalfLife);
 
+    // Calculate the start and end dates for the employees who were employed at the start of the simulation
+    const [employmentDates, endDatesCount] = employeeData.calculateInitialDates(employeesPerYear, simStartYear, employeeHalfLife);
+
+    // Count the number of current employees
+    let numCurrentEmployees = employmentDates.length;
+    
     let employees: Employee[] = [];
     for (let year = simStartYear; year <= simEndYear; year++) {
-        let yearEmployees = employeeData.targetYearEmployees(employeesPerYear, year);
-        console.log(year);
-        for (let i = 0; i < numNewHires; i++) {
-            let iD = employees.length;
-            let startDate = employeeData.calculateStartDatesForYear(simStartYear, numNewHires);
-            let endDate = employeeData.calculateEndDate(year, startDate, employeeHalfLife);
+        // Calculate the number of new hires for the current year
+        let yearNewHires = employeeData.yearNewHires(employeesPerYear, numCurrentEmployees, depthOfMA, year, endDatesCount);
+        let startDates = employeeData.calculateStartDatesForYear(year, yearNewHires);
+        //console.log(startDates);
+        console.log(numCurrentEmployees);
+        numCurrentEmployees -= endDatesCount[year];
+        numCurrentEmployees += yearNewHires;
+        console.log(`Year ${year}: ${yearNewHires} coming, ${endDatesCount[year]} leaving, ${numCurrentEmployees} at EOY`);
+        console.log(startDates.length);
+        //console.log(`Year ${year}: ${yearNewHires} new hires, ${numCurrentEmployees} current employees`);
+        
+        for (let i = 0; i < yearNewHires; i++) {
+            // Directly create the employee object in one go
+            //console.log("Employee ID: " + employees.length);
+            //console.log("Calling calculateBirthDate...");
+            let birthDate = employeeData.calculateBirthDate(startDates[i], avgStartAge, stdevStartAge);
+            //console.log("Calling calculateSex...");
             let sex = employeeData.calculateSex();
-            let birthDate = employeeData.calculateBirthDate(startDate, avgStartAge, stdevStartAge);
+            //console.log(sex);
+            //console.log("Calling calculateFirstName...");
             let firstName = employeeData.calculateFirstName(sex, birthDate);
-            let middleName = employeeData.calculateMiddleName(sex, birthDate);
+            //console.log(firstName);
+            //console.log("Calling calculateMiddleName...");
+            let middleName = employeeData.calculateMiddleName(sex, birthDate, firstName);
+            //console.log(middleName);
+            //console.log("Calling calculateLastName...");
             let lastName = employeeData.calculateLastName();
-            let email = employeeData.calculateEmail(firstName, middleName, lastName);
-            let positionID = 0;
-            let branchID = 0;
-            let supervisorID = 0;
-            let status = "Removed";
-
+            //console.log(lastName);
+            //console.log("Calling calculateEndDate and calculateEmail...");
+            //console.log(year, startDates[i], employeeHalfLife);
             let employee: Employee = {
-                ID: iD,
-                StartDate: startDate.getTime(),
-                EndDate: endDate.getTime(),
-                DOB: birthDate.getTime(),
+                ID: employees.length,
+                StartDate: startDates[i].getTime(),
+                EndDate: employeeData.calculateEndDate(startDates[i], employeeHalfLife).getTime(),
+                DOB: 10, //birthDate.getTime(),
                 Sex: sex,
                 FirstName: firstName,
                 MiddleName: middleName,
                 LastName: lastName,
-                Email: email,
-                PositionID: positionID,
-                BranchID: branchID,
-                SupervisorID: supervisorID,
-                Status: status
+                Email: employeeData.calculateEmail(firstName, middleName, lastName),
+                PositionID: 0,
+                BranchID: 0,
+                SupervisorID: 0,
+                Status: "Removed"
             };
-
             employees.push(employee);
         }
     }
 
+    // Send the employee data to the server
+    let batchSize = 100;
+    sendEmployeeDataToDatabase(employees, batchSize);
+
 }
-
-
-
-
-/*-----------------------------------------------------------------------------*/
-
-// This code will let me increment a value. I can use this to increment the number of employees in a given year.
-
-
-
-// let yearEmployeesData: YearEmployeesData[] = [ /* your array of YearEmployeesData objects */ ];
-
-// let targetYear = 2016;  // The year you're interested in
-
-// // Find the object for the target year
-// let targetYearObject = yearEmployeesData.find(data => data.year === targetYear);
-
-// if (targetYearObject) {
-//     // If the object exists, increment the employees count
-//     targetYearObject.employees += 1;
-// } else {
-//     // If the object doesn't exist, create a new one and set the employees count to 1
-//     yearEmployeesData.push({ year: targetYear, employees: 1 });
-// }
-
-/*-----------------------------------------------------------------------------*/
-
