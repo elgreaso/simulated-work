@@ -6,14 +6,18 @@ interface EmployeeProps {
 }
 
 const Employee: React.FC<EmployeeProps> = ({ employee }) => {
-  const startDate = new Date(employee.StartDate * 1000);
+  const startDate = new Date(employee.StartDate);
   const startDateString = startDate.toLocaleDateString("en-US");
 
-  const endDate = employee.EndDate ? new Date(employee.EndDate * 1000) : null;
+  const endDate = employee.EndDate ? new Date(employee.EndDate) : null;
   const endDateString = endDate ? endDate.toLocaleDateString("en-US") : "N/A";
 
-  const dob = new Date(employee.DOB * 1000);
+  const dob = new Date(employee.DOB);
   const dobString = dob.toLocaleDateString("en-US");
+
+  console.log(startDate, startDateString);
+  console.log(endDate, endDateString);
+  console.log(dob, dobString);
 
   return (
     <div>

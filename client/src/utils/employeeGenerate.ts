@@ -38,14 +38,14 @@ export const generateEmployees = async (numEmployees: number, simStartYear: numb
         
         let employee: Employee = {
             ID: employees.length,
-            StartDate: initialEmployee.startDate.getTime(),
-            EndDate: initialEmployee.endDate ? initialEmployee.endDate.getTime() : null,
             DOB: birthDate.getTime(),
             Sex: sex,
             FirstName: firstName,
             MiddleName: middleName,
             LastName: lastName,
             Email: employeeData.calculateEmail(firstName, middleName, lastName),
+            StartDate: initialEmployee.startDate.getTime(),
+            EndDate: initialEmployee.endDate ? initialEmployee.endDate.getTime() : null,
             PositionID: 0,
             BranchID: 0,
             SupervisorID: 0,
@@ -86,7 +86,7 @@ export const generateEmployees = async (numEmployees: number, simStartYear: numb
                 Status: "Removed"
             };
             employees.push(employee);
-
+            
             if (employee.EndDate !== null) {
                 let newEmploymentDates: employeeData.EmploymentDates = {
                     startDate: new Date(startDates[i]),
@@ -101,6 +101,7 @@ export const generateEmployees = async (numEmployees: number, simStartYear: numb
                 }
             }
         }
+        //console.log("Year: " + year + ", New: " + yearNewHires + ", Leaving: " + endDatesCount[year] + ", Current: " + numCurrentEmployees + ", Total: " + employees.length);
     }
 
     // Send the employee data to the server

@@ -1,9 +1,14 @@
 PRAGMA foreign_keys = OFF;
+PRAGMA journal_mode=WAL;
+PRAGMA synchronous=OFF;
+pragma page_size = 32768;
+--PRAGMA locking_mode=EXCLUSIVE;
 
 -- Contains all possible employee information.
 CREATE TABLE Employees (
     ID INTEGER PRIMARY KEY AUTOINCREMENT,
     DOB INTEGER,
+    Sex TEXT,
     FirstName TEXT,
     MiddleName TEXT,
     LastName TEXT,
@@ -15,12 +20,11 @@ CREATE TABLE Employees (
     StreetAddress TEXT,
     City TEXT,
     State TEXT,
-    ZipCode INTEGER,
+    ZipCode TEXT,
     Country TEXT,
-    CellNumber INTEGER,
-    HomeNumber INTEGER,
-    WorkNumber INTEGER,
-    Sex TEXT,
+    CellNumber TEXT,
+    HomeNumber TEXT,
+    WorkNumber TEXT,
     PositionID INTEGER,
     EmploymentType TEXT,
     SalaryID INTEGER,

@@ -188,8 +188,6 @@ export const calculateInitialDates = (employeesPerYear: YearEmployeesData[], sim
             endDate: endDate
         });
 
-
-
         // Increase the count for the end date's year
         const endYear = endDate.getFullYear();
         if (endDatesCount[endYear]) {
@@ -201,8 +199,6 @@ export const calculateInitialDates = (employeesPerYear: YearEmployeesData[], sim
 
     // Sort the dates by the start date
     initialDates.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
-
-    console.log(initialDates);
 
     return [initialDates, endDatesCount];
 }
@@ -429,7 +425,8 @@ export function calculateFirstName(sex: string, birthDate: Date): string {
 
     // If there's no LUT for the birth year, return a default name
     if (!lut) {
-        return 'Default Name';
+        birthYear = Math.floor(Math.random() * 110) + 1910;
+        lut = lutByYear[birthYear];        
     }
 
     // Create a weighted random selector with the LUT for the birth year
@@ -455,7 +452,8 @@ export function calculateMiddleName(sex: string, birthDate: Date, firstName: str
 
     // If there's no LUT for the birth year, return a default name
     if (!lut) {
-        return 'Default Name';
+        birthYear = Math.floor(Math.random() * 110) + 1910;
+        lut = lutByYear[birthYear];        
     }
 
     // Create a weighted random selector with the LUT for the birth year
@@ -501,14 +499,20 @@ export function calculateMiddleName(sex: string, birthDate: Date, firstName: str
     //         pcthispanic: parseFloat(item.pcthispanic),
     //     };
     // });
-export const calculateLastName = (): string => {
-    // Pick a random index
-    const randomIndex = Math.floor(Math.random() * lastNameData.length);
+    export const calculateLastName = (): string => {
+        // Pick a random index
+        const randomIndex = Math.floor(Math.random() * lastNameData.length);
+        
+        // Get the last name at the random index
+        let name = String(lastNameData[randomIndex][0]);
+        
+        // Convert the name to title case
+        let titleCaseName = name.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.substring(1)).join(' ');
     
-    // Return the last name at the random index
-    return String(lastNameData[randomIndex][0]);
-};
-      
+        // Return the title case name
+        return titleCaseName;
+    };
+
 /*-----------------------------------------------------------------------------*/
 
 /**

@@ -17,33 +17,46 @@ let counter = 0;
 // Helper function to initialize the database
 async function initializeDatabase() {
   return new Promise((resolve, reject) => {
-      // Resolve the database path
-      const dbPath = path.resolve(__dirname, '.', 'db', `database-${counter++}.db`);
-
-      db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
-        if (err) {
+    const dbDir = path.resolve(__dirname, '.', 'db');
+    fs.readdir(dbDir)
+      .then(files => {
+        const dbFiles = files.filter(f => f.startsWith('database-') && f.endsWith('.db'));
+        let maxNumber = dbFiles.reduce((max, file) => {
+          const number = parseInt(file.slice('database-'.length, -'.db'.length), 10);
+          return isNaN(number) ? max : Math.max(max, number);
+        }, 0);
+        const newDbFile = `database-${maxNumber + 1}.db`;
+        const dbPath = path.join(dbDir, newDbFile);
+        db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, err => {
+          if (err) {
             console.error('Error creating database ', err);
             reject(err);
-        } else {
-            console.log('Database created');
+          } else {
+            console.log('Database created at', dbPath);
             fs.readFile(path.join(__dirname, '.', 'db', 'init.sql'), { encoding: 'utf-8' })
-                .then((data) => {
-                    db.exec(data, (err) => {
-                        if (err) {
-                            console.error('Could not run init.sql:', err);
-                            reject(err);
-                        }
-                        resolve();
-                    });
-                })
-                .catch((err) => {
-                    console.error('Could not read from init.sql:', err);
+              .then(data => {
+                db.exec(data, err => {
+                  if (err) {
+                    console.error('Could not run init.sql:', err);
                     reject(err);
+                  }
+                  resolve();
                 });
+              })
+              .catch(err => {
+                console.error('Could not read from init.sql:', err);
+                reject(err);
+              });
           }
+        });
+      })
+      .catch(err => {
+        console.error('Could not read database directory:', err);
+        reject(err);
       });
   });
 }
+
 
 // Endpoint to initialize the database
 app.get('/initialize', async (req, res) => {
@@ -64,14 +77,14 @@ app.post('/api/employees', (req, res) => {
     const newEmployees = req.body; // Assume this is an array of employee objects
 
     // Build a SQL command for a bulk insert
-    const placeholders = newEmployees.map(() => '(?,?,?,?,?,?,?,?,?,?,?)').join(',');
-    const sql = `INSERT INTO Employees (ID, Sex, FirstName, MiddleName, LastName, Email, StartDate, PositionID, BranchID, SupervisorID, Status) VALUES ${placeholders}`;
+    const placeholders = newEmployees.map(() => '(?,?,?,?,?,?,?,?,?,?,?,?,?)').join(',');
+    const sql = `INSERT INTO Employees (ID, DOB, Sex, FirstName, MiddleName, LastName, Email, StartDate, EndDate, PositionID, BranchID, SupervisorID, Status) VALUES ${placeholders}`;
 
     // Flatten the employee objects into an array of parameters for the SQL command
     const params = newEmployees.flatMap(employee => [
-        employee.ID, employee.Sex, employee.FirstName, employee.MiddleName, 
-        employee.LastName, employee.Email, employee.StartDate, employee.PositionID,
-        employee.BranchID, employee.SupervisorID, employee.Status
+        employee.ID, employee.DOB, employee.Sex, employee.FirstName, employee.MiddleName, 
+        employee.LastName, employee.Email, employee.StartDate, employee.EndDate,
+        employee.PositionID, employee.BranchID, employee.SupervisorID, employee.Status
     ]);
   
     // Execute the SQL command

@@ -48,6 +48,9 @@ export interface Employee {
     Status: string;
 }
 
+git config --global core.editor "'C:\Users\willi\AppData\Local\Programs\Microsoft VS Code Insiders\bin\code-insiders' --wait"
+
+
 /**
  * EmployeeListProps Interface
  * 
