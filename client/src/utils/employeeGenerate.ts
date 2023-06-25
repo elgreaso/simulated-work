@@ -2,8 +2,6 @@ import { Employee } from '../types';
 import seedrandom from 'seedrandom';
 import * as employeeData from './employeeData'
 import { sendEmployeeDataToDatabase } from './databaseUtils';
-import { start } from 'repl';
-import { targetYearEmployees } from './employeeData';
 
 /**
  * This function generates new employees.
@@ -27,46 +25,56 @@ export const generateEmployees = async (numEmployees: number, simStartYear: numb
     // Calculate the start and end dates for the employees who were employed at the start of the simulation
     const [employmentDates, endDatesCount] = employeeData.calculateInitialDates(employeesPerYear, simStartYear, employeeHalfLife);
 
+    let initialEmployees = employmentDates;
+    let employees: Employee[] = [];
+
+    // Insert initial employees
+    for (let initialEmployee of initialEmployees) {
+        let birthDate = employeeData.calculateBirthDate(initialEmployee.startDate, avgStartAge, stdevStartAge);
+        let sex = employeeData.calculateSex();
+        let firstName = employeeData.calculateFirstName(sex, birthDate);
+        let middleName = employeeData.calculateMiddleName(sex, birthDate, firstName);
+        let lastName = employeeData.calculateLastName();
+        
+        let employee: Employee = {
+            ID: employees.length,
+            StartDate: initialEmployee.startDate.getTime(),
+            EndDate: initialEmployee.endDate ? initialEmployee.endDate.getTime() : null,
+            DOB: birthDate.getTime(),
+            Sex: sex,
+            FirstName: firstName,
+            MiddleName: middleName,
+            LastName: lastName,
+            Email: employeeData.calculateEmail(firstName, middleName, lastName),
+            PositionID: 0,
+            BranchID: 0,
+            SupervisorID: 0,
+            Status: "Removed"
+        };
+        employees.push(employee);
+    }
+
     // Count the number of current employees
     let numCurrentEmployees = employmentDates.length;
     
-    let employees: Employee[] = [];
+
     for (let year = simStartYear; year <= simEndYear; year++) {
         // Calculate the number of new hires for the current year
         let yearNewHires = employeeData.yearNewHires(employeesPerYear, numCurrentEmployees, depthOfMA, year, endDatesCount);
         let startDates = employeeData.calculateStartDatesForYear(year, yearNewHires);
-        //console.log(startDates);
-        console.log(numCurrentEmployees);
         numCurrentEmployees -= endDatesCount[year];
         numCurrentEmployees += yearNewHires;
-        console.log(`Year ${year}: ${yearNewHires} coming, ${endDatesCount[year]} leaving, ${numCurrentEmployees} at EOY`);
-        console.log(startDates.length);
-        //console.log(`Year ${year}: ${yearNewHires} new hires, ${numCurrentEmployees} current employees`);
-        
         for (let i = 0; i < yearNewHires; i++) {
-            // Directly create the employee object in one go
-            //console.log("Employee ID: " + employees.length);
-            //console.log("Calling calculateBirthDate...");
             let birthDate = employeeData.calculateBirthDate(startDates[i], avgStartAge, stdevStartAge);
-            //console.log("Calling calculateSex...");
             let sex = employeeData.calculateSex();
-            //console.log(sex);
-            //console.log("Calling calculateFirstName...");
             let firstName = employeeData.calculateFirstName(sex, birthDate);
-            //console.log(firstName);
-            //console.log("Calling calculateMiddleName...");
             let middleName = employeeData.calculateMiddleName(sex, birthDate, firstName);
-            //console.log(middleName);
-            //console.log("Calling calculateLastName...");
             let lastName = employeeData.calculateLastName();
-            //console.log(lastName);
-            //console.log("Calling calculateEndDate and calculateEmail...");
-            //console.log(year, startDates[i], employeeHalfLife);
             let employee: Employee = {
                 ID: employees.length,
                 StartDate: startDates[i].getTime(),
                 EndDate: employeeData.calculateEndDate(startDates[i], employeeHalfLife).getTime(),
-                DOB: 10, //birthDate.getTime(),
+                DOB: birthDate.getTime(),
                 Sex: sex,
                 FirstName: firstName,
                 MiddleName: middleName,
@@ -78,6 +86,20 @@ export const generateEmployees = async (numEmployees: number, simStartYear: numb
                 Status: "Removed"
             };
             employees.push(employee);
+
+            if (employee.EndDate !== null) {
+                let newEmploymentDates: employeeData.EmploymentDates = {
+                    startDate: new Date(startDates[i]),
+                    endDate: new Date(employee.EndDate)
+                };
+                employmentDates.push(newEmploymentDates);
+                const endYear = new Date(employee.EndDate).getFullYear();
+                if (endDatesCount[endYear]) {
+                    endDatesCount[endYear]++;
+                } else {
+                    endDatesCount[endYear] = 1;
+                }
+            }
         }
     }
 

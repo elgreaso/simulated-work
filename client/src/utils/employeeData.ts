@@ -140,7 +140,7 @@ export const calculateEndDate = (employeeStartDate: Date, employeeHalfLife: numb
 
 /*-----------------------------------------------------------------------------*/
 
-interface EmploymentDates {
+export interface EmploymentDates {
     startDate: Date;
     endDate: Date;
 }
@@ -188,6 +188,8 @@ export const calculateInitialDates = (employeesPerYear: YearEmployeesData[], sim
             endDate: endDate
         });
 
+
+
         // Increase the count for the end date's year
         const endYear = endDate.getFullYear();
         if (endDatesCount[endYear]) {
@@ -198,6 +200,10 @@ export const calculateInitialDates = (employeesPerYear: YearEmployeesData[], sim
     }
 
     // Sort the dates by the start date
+    initialDates.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+
+    console.log(initialDates);
+
     return [initialDates, endDatesCount];
 }
 
