@@ -42,6 +42,7 @@ export interface Employee {
     Email: string;
     StartDate: number;
     EndDate: number | null;
+    EducationLevel: string;
     PositionID: number;
     BranchID: number;
     SupervisorID: number | null;

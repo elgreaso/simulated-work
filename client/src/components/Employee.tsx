@@ -15,9 +15,7 @@ const Employee: React.FC<EmployeeProps> = ({ employee }) => {
   const dob = new Date(employee.DOB);
   const dobString = dob.toLocaleDateString("en-US");
 
-  console.log(startDate, startDateString);
-  console.log(endDate, endDateString);
-  console.log(dob, dobString);
+  console.log(employee.ID);
 
   return (
     <div>
@@ -28,6 +26,7 @@ const Employee: React.FC<EmployeeProps> = ({ employee }) => {
       <p>Email: {employee.Email}</p>
       <p>Start Date: {startDateString}</p>
       <p>End Date: {endDateString}</p>
+      <p>Education Level: {employee.EducationLevel}</p>
       <p>Position ID: {employee.PositionID}</p>
       <p>Branch ID: {employee.BranchID}</p>
       <p>Supervisor ID: {employee.SupervisorID}</p>

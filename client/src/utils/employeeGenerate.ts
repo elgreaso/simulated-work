@@ -30,6 +30,7 @@ export const generateEmployees = async (numEmployees: number, simStartYear: numb
 
     // Insert initial employees
     for (let initialEmployee of initialEmployees) {
+        let educationLevel = employeeData.calculateEducation();
         let birthDate = employeeData.calculateBirthDate(initialEmployee.startDate, avgStartAge, stdevStartAge);
         let sex = employeeData.calculateSex();
         let firstName = employeeData.calculateFirstName(sex, birthDate);
@@ -46,6 +47,7 @@ export const generateEmployees = async (numEmployees: number, simStartYear: numb
             Email: employeeData.calculateEmail(firstName, middleName, lastName),
             StartDate: initialEmployee.startDate.getTime(),
             EndDate: initialEmployee.endDate ? initialEmployee.endDate.getTime() : null,
+            EducationLevel: educationLevel,
             PositionID: 0,
             BranchID: 0,
             SupervisorID: 0,
@@ -65,6 +67,7 @@ export const generateEmployees = async (numEmployees: number, simStartYear: numb
         numCurrentEmployees -= endDatesCount[year];
         numCurrentEmployees += yearNewHires;
         for (let i = 0; i < yearNewHires; i++) {
+            let educationLevel = employeeData.calculateEducation();
             let birthDate = employeeData.calculateBirthDate(startDates[i], avgStartAge, stdevStartAge);
             let sex = employeeData.calculateSex();
             let firstName = employeeData.calculateFirstName(sex, birthDate);
@@ -74,6 +77,7 @@ export const generateEmployees = async (numEmployees: number, simStartYear: numb
                 ID: employees.length,
                 StartDate: startDates[i].getTime(),
                 EndDate: employeeData.calculateEndDate(startDates[i], employeeHalfLife).getTime(),
+                EducationLevel: educationLevel,
                 DOB: birthDate.getTime(),
                 Sex: sex,
                 FirstName: firstName,

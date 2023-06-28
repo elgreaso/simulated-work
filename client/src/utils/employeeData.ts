@@ -403,12 +403,6 @@ export const calculateSex = (): string => {
 
 /*-----------------------------------------------------------------------------*/
 
-interface NameData {
-    year: number;
-    name: string;
-    popularity: number;
-}
-
 // Load the precomputed lookup tables from JSON files
 //let firstNameMLUT = loadJsonData('./lut/firstNameMLUT.json');
 //let firstNameFLUT = loadJsonData('./lut/firstNameFLUT.json');
@@ -534,6 +528,25 @@ export const calculateEmail = (firstName: string, middleName: string, lastName: 
 
     // Return an Email object for this employee.
     return email;
+};
+
+/*-----------------------------------------------------------------------------*/
+
+type EducationLevel = 'No High School Diploma' | 'High School Diploma' | 'Some College, No Degree' | 'Associate Degree' | 'Bachelor\'s Degree' | 'Master\'s Degree' | 'Doctoral or Professional Degree';
+
+export const educationData: Record<EducationLevel, number> = require('./data/education.json');
+
+export const calculateEducation = (): EducationLevel => {
+  const total = Object.values(educationData).reduce((sum, value) => sum + value, 0);
+  const random = Math.random() * total;
+  let count = 0;
+  for (const [level, value] of Object.entries(educationData)) {
+    count += value;
+    if (random < count) {
+      return level as EducationLevel;
+    }
+  }
+  throw new Error('Invalid data');
 };
 
 /*-----------------------------------------------------------------------------*/

@@ -77,13 +77,13 @@ app.post('/api/employees', (req, res) => {
     const newEmployees = req.body; // Assume this is an array of employee objects
 
     // Build a SQL command for a bulk insert
-    const placeholders = newEmployees.map(() => '(?,?,?,?,?,?,?,?,?,?,?,?,?)').join(',');
-    const sql = `INSERT INTO Employees (ID, DOB, Sex, FirstName, MiddleName, LastName, Email, StartDate, EndDate, PositionID, BranchID, SupervisorID, Status) VALUES ${placeholders}`;
+    const placeholders = newEmployees.map(() => '(?,?,?,?,?,?,?,?,?,?,?,?,?,?)').join(',');
+    const sql = `INSERT INTO Employees (ID, DOB, Sex, FirstName, MiddleName, LastName, Email, StartDate, EndDate, EducationLevel, PositionID, BranchID, SupervisorID, Status) VALUES ${placeholders}`;
 
     // Flatten the employee objects into an array of parameters for the SQL command
     const params = newEmployees.flatMap(employee => [
         employee.ID, employee.DOB, employee.Sex, employee.FirstName, employee.MiddleName, 
-        employee.LastName, employee.Email, employee.StartDate, employee.EndDate,
+        employee.LastName, employee.Email, employee.StartDate, employee.EndDate, employee.EducationLevel,
         employee.PositionID, employee.BranchID, employee.SupervisorID, employee.Status
     ]);
   
