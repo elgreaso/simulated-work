@@ -15,12 +15,9 @@ import lastNameData from './data/lastName.json';
 /*-----------------------------------------------------------------------------*/
 
 /**
- * Interface YearEmployeesData
- *
- * This interface is used to represent year-wise data for the total number of employees in a company.
- * 
- * @param year       - This is the year for which the number of employees is recorded.
- * @param employees  - The total number of employees in the corresponding year.
+ * An interface representing the number of employees for a given year.
+ * @param year The year for which the employee data is recorded.
+ * @param employees The number of employees for the given year.
  */
 interface YearEmployeesData {
     year: number;
@@ -37,26 +34,31 @@ interface YearEmployeesData {
  * It is designed to predict the potential number of employees in the future by taking into account demographic changes. 
  * For example, as the population increases, we could expect the number of employees to increase correspondingly.
  *
- * @param presentEmployees  - The total number of employees at present.
- * @param populationData    - An array of objects containing the year and population for each year.
+ * @param presentEmployees  The total number of employees at present.
+ * @param startYear         The first year for which to calculate the number of employees.
+ * @param endYear           The last year for which to calculate the number of employees.
  *
  * @returns An array of objects containing the year (.year) and the calculated number of employees (.employees) for that year.
  *
+ * @throws An error if the current year is not found in the population data.
+ *
  * @example
  *
- * const populationData = [
- *     { year: 2021, population: 900000 },
- *     { year: 2022, population: 950000 },
- *     { year: 2023, population: 1000000 },
- * ];
- * 
- * const numEmployees = 10000;
- * 
- * console.log(calculateEmployeesPerYear(numEmployees, populationData)); // Outputs: [{ year: 2021, employees: 9000 }, { year: 2022, employees: 9500 }, { year: 2023, employees: 10000 }]
+ * const presentEmployees = 100;
+ * const startYear = 2020;
+ * const endYear = 2022;
+ * const employeesPerYear = calculateEmployeesPerYear(presentEmployees, startYear, endYear);
+ * console.log(employeesPerYear);
+ * // Output: [{ year: 2020, employees: 100 }, { year: 2021, employees: 110 }, { year: 2022, employees: 120 }]
  */
 export const calculateEmployeesPerYear = (presentEmployees: number, startYear: number, endYear: number): YearEmployeesData[] => {
     const currentYear = new Date().getFullYear();
     const populationThisYear = populationData.find((item) => item.year === currentYear)?.population || 0;
+
+    if (populationThisYear === 0) {
+        throw new Error(`Population data not found for current year (${currentYear})`);
+    }
+
     const employeePercentOfPopulation = presentEmployees / populationThisYear;
 
     const employeesPerYear = populationData
@@ -72,6 +74,28 @@ export const calculateEmployeesPerYear = (presentEmployees: number, startYear: n
 
 /*-----------------------------------------------------------------------------*/
 
+/**
+ * Function: targetYearEmployees
+ *
+ * This function is used to get the number of employees for a specific year from an array of objects containing the year and the calculated number of employees for that year.
+ *
+ * @param employeesPerYear  An array of objects containing the year (.year) and the calculated number of employees (.employees) for that year.
+ * @param targetStartYear   The year for which to get the number of employees.
+ *
+ * @returns The number of employees for the specified year.
+ *
+ * @example
+ *
+ * const employeesPerYear = [
+ *   { year: 2020, employees: 100 },
+ *   { year: 2021, employees: 110 },
+ *   { year: 2022, employees: 120 },
+ * ];
+ * const targetStartYear = 2021;
+ * const targetEmployees = targetYearEmployees(employeesPerYear, targetStartYear);
+ * console.log(targetEmployees);
+ * // Output: 110
+ */
 export const targetYearEmployees = (employeesPerYear: YearEmployeesData[], targetStartYear: number): number => {
     let targetYearEmployees = employeesPerYear.find(data => data.year === targetStartYear)?.employees || 0;
     
@@ -82,15 +106,19 @@ export const targetYearEmployees = (employeesPerYear: YearEmployeesData[], targe
 
 /**
  * Function: getPreviousMonday
- * 
- * Returns the date of the Monday prior to the given date.
- * The JavaScript `getDay` method is used to get the day of the week for the date (0 for Sunday, 1 for Monday, etc.).
- * If the day is not Monday, it adjusts the date to the previous Monday.
- * If the day is already Monday, it returns the date as is.
- * 
- * @param date  - The initial date from which to find the previous Monday.
- * 
- * @return A Date object set to the previous Monday.
+ *
+ * This function is used to get the previous Monday from a given date.
+ *
+ * @param date  A Date object representing the date for which to get the previous Monday.
+ *
+ * @returns A Date object representing the previous Monday.
+ *
+ * @example
+ *
+ * const date = new Date('2022-01-05T00:00:00.000Z');
+ * const previousMonday = getPreviousMonday(date);
+ * console.log(previousMonday);
+ * // Output: Mon Jan 03 2022 00:00:00 GMT-0800 (Pacific Standard Time)
  */
 function getPreviousMonday(date: Date): Date {
     const day = date.getDay();
@@ -109,14 +137,20 @@ function getPreviousMonday(date: Date): Date {
 /**
  * Function: calculateEndDate
  *
- * This function calculates the end date of an employee given their start date and the employee half-life.
- * It uses a random number to simulate variability in employment duration.
+ * This function is used to calculate the end date of an employee's contract based on their start date and half-life.
  *
- * @param simStartYear      - The start year of the simulation
- * @param employeeStartDate - The start date of the employee
- * @param employeeHalfLife  - The number of years it takes for half of the employees to leave
+ * @param employeeStartDate  A Date object representing the start date of the employee's contract.
+ * @param employeeHalfLife   A number representing the half-life of the employee's contract in years.
  *
- * @returns A Date object representing the employee's end date.
+ * @returns A Date object representing the end date of the employee's contract.
+ *
+ * @example
+ *
+ * const employeeStartDate = new Date('2022-01-01T00:00:00.000Z');
+ * const employeeHalfLife = 5;
+ * const employeeEndDate = calculateEndDate(employeeStartDate, employeeHalfLife);
+ * console.log(employeeEndDate);
+ * // Output: Sat Jan 01 2028 00:00:00 GMT-0800 (Pacific Standard Time)
  */
 export const calculateEndDate = (employeeStartDate: Date, employeeHalfLife: number): Date => {
     
@@ -140,6 +174,14 @@ export const calculateEndDate = (employeeStartDate: Date, employeeHalfLife: numb
 
 /*-----------------------------------------------------------------------------*/
 
+/**
+ * Interface: EmploymentDates
+ *
+ * This interface represents the start and end dates of an employee's employment.
+ *
+ * @param startDate A Date object representing the start date of the employee's employment.
+ * @param endDate A Date object representing the end date of the employee's employment.
+ */
 export interface EmploymentDates {
     startDate: Date;
     endDate: Date;
@@ -147,7 +189,40 @@ export interface EmploymentDates {
 
 /*-----------------------------------------------------------------------------*/
 
-// Returns an array of start dates and end dates for the initial employees
+/**
+ * Function: calculateInitialDates
+ *
+ * This function is used to calculate the start and end dates of the initial employees based on the number of employees per year, the simulation start year, and the employee half-life.
+ *
+ * @param employeesPerYear  An array of objects representing the number of employees for each year.
+ * @param simStartYear      A number representing the year in which the simulation starts.
+ * @param employeeHalfLife  A number representing the half-life of the employee's contract in years.
+ *
+ * @returns A tuple containing an array of objects representing the start and end dates of the initial employees and an object containing the count of end dates for each year.
+ *
+ * @example
+ *
+ * const employeesPerYear = [
+ *   { year: 2022, employees: 10 },
+ *   { year: 2023, employees: 20 },
+ *   { year: 2024, employees: 30 },
+ *   { year: 2025, employees: 40 },
+ *   { year: 2026, employees: 50 },
+ * ];
+ * const simStartYear = 2022;
+ * const employeeHalfLife = 5;
+ * const [initialDates, endDatesCount] = calculateInitialDates(employeesPerYear, simStartYear, employeeHalfLife);
+ * console.log(initialDates);
+ * // Output: [
+ * //   { startDate: Mon Jan 03 2022 00:00:00 GMT-0800 (Pacific Standard Time), endDate: Mon Jan 10 2022 00:00:00 GMT-0800 (Pacific Standard Time) },
+ * //   { startDate: Mon Jan 10 2022 00:00:00 GMT-0800 (Pacific Standard Time), endDate: Mon Jan 17 2022 00:00:00 GMT-0800 (Pacific Standard Time) },
+ * //   { startDate: Mon Jan 17 2022 00:00:00 GMT-0800 (Pacific Standard Time), endDate: Mon Jan 24 2022 00:00:00 GMT-0800 (Pacific Standard Time) },
+ * //   { startDate: Mon Jan 24 2022 00:00:00 GMT-0800 (Pacific Standard Time), endDate: Mon Jan 31 2022 00:00:00 GMT-0800 (Pacific Standard Time) },
+ * //   { startDate: Mon Jan 31 2022 00:00:00 GMT-0800 (Pacific Standard Time), endDate: Mon Feb 07 2022 00:00:00 GMT-0800 (Pacific Standard Time) }
+ * // ]
+ * console.log(endDatesCount);
+ * // Output: { '2022': 10 }
+ */
 export const calculateInitialDates = (employeesPerYear: YearEmployeesData[], simStartYear: number, employeeHalfLife: number): [EmploymentDates[], Record<number, number>] => {
     let numStartYearEmployees: number = targetYearEmployees(employeesPerYear, simStartYear);
     let simStartDate: Date = new Date(simStartYear, 0, 1);
@@ -205,6 +280,36 @@ export const calculateInitialDates = (employeesPerYear: YearEmployeesData[], sim
 
 /*-----------------------------------------------------------------------------*/
 
+/**
+ * Function: yearNewHires
+ *
+ * This function is used to calculate the number of new hires for a given year based on the number of employees for each year, the number of employees in the current year, the depth of the moving average, the current year, and the count of end dates for each year.
+ *
+ * @param employeesPerYear  An array of objects representing the number of employees for each year.
+ * @param thisYearEmployees A number representing the number of employees in the current year.
+ * @param depthOfMA         A number representing the depth of the moving average.
+ * @param currentYear       A number representing the current year.
+ * @param endDatesCount     An object containing the count of end dates for each year.
+ *
+ * @returns A number representing the number of new hires for the given year.
+ *
+ * @example
+ *
+ * const employeesPerYear = [
+ *   { year: 2022, employees: 10 },
+ *   { year: 2023, employees: 20 },
+ *   { year: 2024, employees: 30 },
+ *   { year: 2025, employees: 40 },
+ *   { year: 2026, employees: 50 },
+ * ];
+ * const thisYearEmployees = 30;
+ * const depthOfMA = 3;
+ * const currentYear = 2024;
+ * const endDatesCount = { '2022': 10, '2023': 20, '2024': 30 };
+ * const yearNewHires = yearNewHires(employeesPerYear, thisYearEmployees, depthOfMA, currentYear, endDatesCount);
+ * console.log(yearNewHires);
+ * // Output: 10
+ */
 export function yearNewHires(employeesPerYear: YearEmployeesData[], thisYearEmployees: number, depthOfMA: number, currentYear: number, endDatesCount: Record<number, number>): number {
 
     // Find the number of employees for the next year
@@ -225,6 +330,16 @@ export function yearNewHires(employeesPerYear: YearEmployeesData[], thisYearEmpl
 
 /*-----------------------------------------------------------------------------*/
 
+/**
+ * Interface: HireData
+ *
+ * This interface represents the statistical data for employee hiring.
+ *
+ * @param avg A number representing the average number of employees hired.
+ * @param stdev A number representing the standard deviation of the number of employees hired.
+ * @param zavg A number representing the average number of employees hired in terms of standard deviations from the mean.
+ * @param zstdev A number representing the standard deviation of the number of employees hired in terms of standard deviations from the mean.
+ */
 interface HireData {
     avg: number;
     stdev: number;
@@ -241,9 +356,8 @@ interface HireData {
  * based on two-week intervals with a fixed number of hires each time. The start dates are then added to an 
  * existing array of start dates.
  *
- * @param targetYear - The year in which the new hires start
- * @param newHiresPerYear - Array of objects containing the number of new hires for each year
- * @param startDates - Array of start dates for employees already hired
+ * @param thisYear - The year in which the new hires start
+ * @param numHires - The number of new hires for the target year
  *
  * @returns The updated array of start dates with the newly hired employees' start dates for the target year added
  */
@@ -359,11 +473,10 @@ function firstMondayOfYear(year: number): Date {
  * that the employee does not exceed 65 years old during their employment period.
  *
  * @param startDate - The start date of the employee's employment
- * @param endDate - The end date of the employee's employment
  * @param avgStartAge - The average age of employees when they start working
  * @param stdevStartAge - The standard deviation of the age of employees when they start working
  *
- * @returns A BirthDate object representing the employee's ID and their calculated birth date
+ * @returns A Date object representing the employee's birth date
  */
 export const calculateBirthDate = (startDate: Date, avgStartAge: number, stdevStartAge: number): Date => {
     let employeeAge: number;
@@ -403,12 +516,20 @@ export const calculateSex = (): string => {
 
 /*-----------------------------------------------------------------------------*/
 
-// Load the precomputed lookup tables from JSON files
-//let firstNameMLUT = loadJsonData('./lut/firstNameMLUT.json');
-//let firstNameFLUT = loadJsonData('./lut/firstNameFLUT.json');
-
+/**
+ * Function: calculateFirstName
+ *
+ * This function calculates the first name for an individual employee, based on their gender and birth date.
+ * The function selects a lookup table based on the gender and birth year of the employee, and uses a weighted
+ * random selector to draw a random name from the lookup table.
+ *
+ * @param sex - The gender of the employee
+ * @param birthDate - The birth date of the employee
+ *
+ * @returns A string containing the employee's first name
+ */
 export function calculateFirstName(sex: string, birthDate: Date): string {
-    // Select the LUT based on the gender
+    // Select the lookup table based on the gender
     let lutByYear: { [key: number]: any } = sex === 'Male' ? firstNameMData : firstNameFData;
 
     // Get the birth year
@@ -417,13 +538,13 @@ export function calculateFirstName(sex: string, birthDate: Date): string {
     // Retrieve the lookup table for the birth year
     let lut = lutByYear[birthYear];
 
-    // If there's no LUT for the birth year, return a default name
+    // If there's no lookup table for the birth year, return a default name
     if (!lut) {
         birthYear = Math.floor(Math.random() * 110) + 1910;
         lut = lutByYear[birthYear];        
     }
 
-    // Create a weighted random selector with the LUT for the birth year
+    // Create a weighted random selector with the lookup table for the birth year
     let selector = new WeightedRandomSelector([], 0, 0);
     selector.aliasTable = lut.aliasTable;
     selector.outcomes = lut.outcomes;
@@ -434,8 +555,22 @@ export function calculateFirstName(sex: string, birthDate: Date): string {
 
 /*-----------------------------------------------------------------------------*/
 
+/**
+ * Function: calculateMiddleName
+ *
+ * This function calculates the middle name for an individual employee, based on their gender, birth date, and first name.
+ * The function selects a lookup table based on the gender and birth year of the employee, and uses a weighted
+ * random selector to draw a random name from the lookup table. It ensures that the generated middle name is different
+ * from the employee's first name.
+ *
+ * @param sex - The gender of the employee
+ * @param birthDate - The birth date of the employee
+ * @param firstName - The first name of the employee
+ *
+ * @returns A string containing the employee's middle name
+ */
 export function calculateMiddleName(sex: string, birthDate: Date, firstName: string): string {
-    // Select the LUT based on the gender
+    // Select the lookup table based on the gender
     let lutByYear: { [key: number]: any } = sex === 'Male' ? firstNameMData : firstNameFData;
 
     // Get the birth year
@@ -444,13 +579,13 @@ export function calculateMiddleName(sex: string, birthDate: Date, firstName: str
     // Retrieve the lookup table for the birth year
     let lut = lutByYear[birthYear];
 
-    // If there's no LUT for the birth year, return a default name
+    // If there's no lookup table for the birth year, return a default name
     if (!lut) {
         birthYear = Math.floor(Math.random() * 110) + 1910;
         lut = lutByYear[birthYear];        
     }
 
-    // Create a weighted random selector with the LUT for the birth year
+    // Create a weighted random selector with the lookup table for the birth year
     let selector = new WeightedRandomSelector([], 0, 0);
     selector.aliasTable = lut.aliasTable;
     selector.outcomes = lut.outcomes;
@@ -493,86 +628,137 @@ export function calculateMiddleName(sex: string, birthDate: Date, firstName: str
     //         pcthispanic: parseFloat(item.pcthispanic),
     //     };
     // });
-    export const calculateLastName = (): string => {
-        // Pick a random index
-        const randomIndex = Math.floor(Math.random() * lastNameData.length);
-        
-        // Get the last name at the random index
-        let name = String(lastNameData[randomIndex][0]);
-        
-        // Convert the name to title case
-        let titleCaseName = name.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.substring(1)).join(' ');
+/**
+ * Function: calculateLastName
+ *
+ * This function calculates the last name for an individual employee.
+ * The function selects a random last name from a lookup table and converts it to title case.
+ *
+ * @param None
+ *
+ * @returns A string containing the employee's last name
+ */
+export const calculateLastName = (): string => {
+    // Pick a random index
+    const randomIndex = Math.floor(Math.random() * lastNameData.length);
     
-        // Return the title case name
-        return titleCaseName;
-    };
+    // Get the last name at the random index
+    let name = String(lastNameData[randomIndex][0]);
+    
+    // Convert the name to title case
+    let titleCaseName = name.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.substring(1)).join(' ');
+
+    // Return the title case name
+    return titleCaseName;
+};
 
 /*-----------------------------------------------------------------------------*/
 
 /**
- * Generates a standard company email address for a given employee based on their names.
- * 
+ * Function: calculateEmail
+ *
+ * This function generates a standard company email address for a given employee based on their names.
+ * The email address is created by concatenating the employee's first name, middle initial, last name, and domain name.
+ * All letters in the email address are converted to lower case as is standard for email addresses.
+ *
  * @param firstName - The employee's first name.
  * @param middleName - The employee's middle name.
  * @param lastName - The employee's last name.
- * 
- * @return An Email object containing the employee's ID and their generated email address.
+ *
+ * @returns A string containing the employee's email address.
  */
 export const calculateEmail = (firstName: string, middleName: string, lastName: string): string => {
-
+    // Get the middle initial from the middle name
     let middleInitial = middleName.charAt(0);
+
+    // Set the domain name
     let domain = 'company.com';
 
-    // Create the email address, converting all letters to lower case as is standard for email addresses.
+    // Create the email address by concatenating the first name, middle initial, last name, and domain name
     let email = `${firstName}.${middleInitial}.${lastName}@${domain}`.toLowerCase();
 
-    // Return an Email object for this employee.
+    // Return the email address
     return email;
 };
 
 /*-----------------------------------------------------------------------------*/
 
+/**
+ * Type: EducationLevel
+ *
+ * This type represents the different levels of education that an employee can have.
+ */
 type EducationLevel = 'No High School Diploma' | 'High School Diploma' | 'Some College, No Degree' | 'Associate Degree' | 'Bachelor\'s Degree' | 'Master\'s Degree' | 'Doctoral or Professional Degree';
 
+/**
+ * Constant: educationData
+ *
+ * This constant contains a lookup table of the number of employees with each level of education.
+ * The lookup table is loaded from a JSON file.
+ */
 export const educationData: Record<EducationLevel, number> = require('./data/education.json');
 
+/**
+ * Function: calculateEducation
+ *
+ * This function calculates the education level for an individual employee.
+ * The function uses a weighted random selector to draw a random education level from the lookup table.
+ *
+ * @param None
+ *
+ * @returns A string containing the employee's education level.
+ */
 export const calculateEducation = (): EducationLevel => {
+  // Calculate the total number of employees with education data
   const total = Object.values(educationData).reduce((sum, value) => sum + value, 0);
+
+  // Generate a random number between 0 and the total number of employees
   const random = Math.random() * total;
+
+  // Iterate over the education levels in the lookup table
   let count = 0;
   for (const [level, value] of Object.entries(educationData)) {
+    // Add the number of employees with the current education level to the count
     count += value;
+
+    // If the random number is less than the count, return the current education level
     if (random < count) {
       return level as EducationLevel;
     }
   }
+
+  // If the function reaches this point, there is an error in the data
   throw new Error('Invalid data');
 };
 
 /*-----------------------------------------------------------------------------*/
 
 /**
- * Generates a random number with a normal distribution, also known as Gaussian distribution.
- * 
+ * Function: getRandom
+ *
+ * This function generates a random number with a normal distribution, also known as Gaussian distribution.
  * The Box-Muller transform, a method commonly used in this type of application, is used here.
  * It involves generating two uniformly distributed random numbers and then transforming them into 
  * two standard normally distributed random variables.
- * 
+ *
  * @param average - The mean of the normal distribution.
  * @param standardDeviation - The standard deviation of the normal distribution.
- * 
- * @return A random number drawn from the distribution described by the provided mean and standard deviation.
+ *
+ * @returns A random number drawn from the distribution described by the provided mean and standard deviation.
  */
-function getRandom(average: number, standardDeviation: number) {
+function getRandom(average: number, standardDeviation: number): number {
+    // Generate two uniformly distributed random numbers
     let u1 = Math.random();
     let u2 = Math.random();
-    // Random standard normal distribution using Box-Muller transform
+
+    // Use the Box-Muller transform to generate two standard normally distributed random variables
     let randStdNormal = Math.sqrt(-2.0 * Math.log(u1)) * Math.sin(2.0 * Math.PI * u2);
-    // Adjust to desired mean and standard deviation
+
+    // Adjust the standard normally distributed random variable to the desired mean and standard deviation
     let randNormal = average + standardDeviation * randStdNormal;
 
+    // Return the random number drawn from the distribution described by the provided mean and standard deviation
     return randNormal;
 }
 
 /*-----------------------------------------------------------------------------*/
-
