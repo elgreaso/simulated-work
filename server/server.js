@@ -14,17 +14,34 @@ let db;
 
 let counter = 0;
 
-// Helper function to initialize the database
+/**
+ * Function: initializeDatabase
+ *
+ * This function initializes the database by creating a new SQLite database file and running an initialization script.
+ * The function first reads the contents of the database directory and filters out any files that do not match the naming convention of "database-*.db".
+ * It then determines the maximum number in the remaining file names and creates a new database file with a name that is one greater than the maximum number.
+ * The function then reads the contents of the initialization script and executes it on the new database.
+ *
+ * @returns A Promise that resolves when the database has been successfully initialized and rejects if there is an error.
+ */
 async function initializeDatabase() {
   return new Promise((resolve, reject) => {
+    // Resolve the path to the database directory
     const dbDir = path.resolve(__dirname, '.', 'db');
+
+    // Read the contents of the database directory
     fs.readdir(dbDir)
       .then(files => {
+        // Filter out any files that do not match the naming convention of "database-*.db"
         const dbFiles = files.filter(f => f.startsWith('database-') && f.endsWith('.db'));
+
+        // Determine the maximum number in the remaining file names
         let maxNumber = dbFiles.reduce((max, file) => {
           const number = parseInt(file.slice('database-'.length, -'.db'.length), 10);
           return isNaN(number) ? max : Math.max(max, number);
         }, 0);
+
+        // Create a new database file with a name that is one greater than the maximum number
         const newDbFile = `database-${maxNumber + 1}.db`;
         const dbPath = path.join(dbDir, newDbFile);
         db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, err => {
@@ -33,6 +50,8 @@ async function initializeDatabase() {
             reject(err);
           } else {
             console.log('Database created at', dbPath);
+
+            // Read the contents of the initialization script and execute it on the new database
             fs.readFile(path.join(__dirname, '.', 'db', 'init.sql'), { encoding: 'utf-8' })
               .then(data => {
                 db.exec(data, err => {
@@ -57,8 +76,18 @@ async function initializeDatabase() {
   });
 }
 
-
-// Endpoint to initialize the database
+/**
+ * Endpoint: /initialize
+ *
+ * This endpoint initializes the database by calling the `initializeDatabase` function.
+ * If the initialization is successful, the endpoint returns a JSON object with a message property set to "Database initialized".
+ * If the initialization fails, the endpoint returns a JSON object with a message property set to "Failed to initialize database" and a status code of 500.
+ *
+ * @param req - The HTTP request object.
+ * @param res - The HTTP response object.
+ *
+ * @returns A Promise that resolves when the database has been successfully initialized and rejects if there is an error.
+ */
 app.get('/initialize', async (req, res) => {
   try {
       await initializeDatabase();
@@ -72,7 +101,19 @@ app.get('/initialize', async (req, res) => {
 // Use middleware to parse JSON
 app.use(express.json());
 
-// POST endpoint for adding a new employee
+/**
+ * Endpoint: /api/employees
+ *
+ * This endpoint adds a new employee to the database by executing a bulk insert SQL command.
+ * The endpoint expects an array of employee objects in the request body.
+ * If the insert is successful, the endpoint returns a JSON object with a count property set to the number of inserted employees.
+ * If the insert fails, the endpoint logs an error message to the console and returns a JSON object with an error property set to the error message and a status code of 500.
+ *
+ * @param req - The HTTP request object.
+ * @param res - The HTTP response object.
+ *
+ * @returns A Promise that resolves when the insert is successful and rejects if there is an error.
+ */
 app.post('/api/employees', (req, res) => {
     const newEmployees = req.body; // Assume this is an array of employee objects
 

@@ -698,38 +698,85 @@ type EducationLevel = 'No High School Diploma' | 'High School Diploma' | 'Some C
  */
 export const educationData: Record<EducationLevel, number> = require('./data/education.json');
 
-/**
- * Function: calculateEducation
- *
- * This function calculates the education level for an individual employee.
- * The function uses a weighted random selector to draw a random education level from the lookup table.
- *
- * @param None
- *
- * @returns A string containing the employee's education level.
- */
-export const calculateEducation = (): EducationLevel => {
-  // Calculate the total number of employees with education data
-  const total = Object.values(educationData).reduce((sum, value) => sum + value, 0);
-
-  // Generate a random number between 0 and the total number of employees
-  const random = Math.random() * total;
-
-  // Iterate over the education levels in the lookup table
-  let count = 0;
-  for (const [level, value] of Object.entries(educationData)) {
-    // Add the number of employees with the current education level to the count
-    count += value;
-
-    // If the random number is less than the count, return the current education level
-    if (random < count) {
-      return level as EducationLevel;
+export const calculateEducation = (year: number): EducationLevel => {
+    const currentYear = new Date().getFullYear();
+    const baseYearDiff = Math.abs(currentYear - year);
+  
+    let weights = Object.entries(educationData).reduce((acc, [level, weight], index) => {
+      const yearDiff = baseYearDiff * (index + 1) * 0.1; // Adding 1 to the index to avoid division by zero
+      const adjustedWeight = weight / Math.pow(yearDiff, 2);
+      return { ...acc, [level]: adjustedWeight };
+    }, {} as Record<EducationLevel, number>);
+  
+    const totalWeight = Object.values(weights).reduce((sum, weight) => sum + weight, 0);
+  
+    const random = Math.random() * totalWeight;
+  
+    let count = 0;
+    for (const [level, weight] of Object.entries(weights)) {
+      count += weight;
+      if (random < count) {
+        return level as EducationLevel;
+      }
     }
-  }
-
-  // If the function reaches this point, there is an error in the data
-  throw new Error('Invalid data');
+  
+    throw new Error('Invalid data');
 };
+
+
+
+/*-----------------------------------------------------------------------------*/
+
+export const trackEducationStatistics = (startYear: number, endYear: number): void => {
+    let counts = {
+      "No High School Diploma": 0,
+      "High School Diploma": 0,
+      "Some College, No Degree": 0,
+      "Associate Degree": 0,
+      "Bachelor's Degree": 0,
+      "Master's Degree": 0,
+      "Doctoral or Professional Degree": 0,
+    };
+  
+    let total = 0;
+  
+    for (let year = startYear; year <= endYear; year++) {
+      for (let i = 0; i < 1000; i++) {
+        const educationLevel = calculateEducation(year);
+  
+        if (counts.hasOwnProperty(educationLevel)) {
+          counts[educationLevel]++;
+          total++;
+        } else {
+          throw new Error(`Invalid education level: ${educationLevel}`);
+        }
+      }
+  
+      // Calculate and print statistics every 5 years
+      if (year % 5 === 0) {
+        console.log(`Year ${year}:`);
+        
+        for (const [level, count] of Object.entries(counts)) {
+          const percent = ((count / total) * 100).toFixed(2);
+          console.log(`    ${level}: ${percent}%`);
+        }
+  
+        // Reset counts for next 5-year period
+        counts = {
+          "No High School Diploma": 0,
+          "High School Diploma": 0,
+          "Some College, No Degree": 0,
+          "Associate Degree": 0,
+          "Bachelor's Degree": 0,
+          "Master's Degree": 0,
+          "Doctoral or Professional Degree": 0,
+        };
+        total = 0;
+      }
+    }
+  };
+  
+  
 
 /*-----------------------------------------------------------------------------*/
 

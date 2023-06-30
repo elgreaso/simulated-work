@@ -28,9 +28,11 @@ export const generateEmployees = async (numEmployees: number, simStartYear: numb
     let initialEmployees = employmentDates;
     let employees: Employee[] = [];
 
+    employeeData.trackEducationStatistics(simStartYear, simEndYear)
+
     // Insert initial employees
     for (let initialEmployee of initialEmployees) {
-        let educationLevel = employeeData.calculateEducation();
+        let educationLevel = employeeData.calculateEducation(simStartYear);
         let birthDate = employeeData.calculateBirthDate(initialEmployee.startDate, avgStartAge, stdevStartAge);
         let sex = employeeData.calculateSex();
         let firstName = employeeData.calculateFirstName(sex, birthDate);
@@ -67,7 +69,7 @@ export const generateEmployees = async (numEmployees: number, simStartYear: numb
         numCurrentEmployees -= endDatesCount[year];
         numCurrentEmployees += yearNewHires;
         for (let i = 0; i < yearNewHires; i++) {
-            let educationLevel = employeeData.calculateEducation();
+            let educationLevel = employeeData.calculateEducation(year);
             let birthDate = employeeData.calculateBirthDate(startDates[i], avgStartAge, stdevStartAge);
             let sex = employeeData.calculateSex();
             let firstName = employeeData.calculateFirstName(sex, birthDate);
@@ -105,7 +107,6 @@ export const generateEmployees = async (numEmployees: number, simStartYear: numb
                 }
             }
         }
-        //console.log("Year: " + year + ", New: " + yearNewHires + ", Leaving: " + endDatesCount[year] + ", Current: " + numCurrentEmployees + ", Total: " + employees.length);
     }
 
     // Send the employee data to the server
