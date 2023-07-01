@@ -95,3 +95,10 @@ export interface BirthDate {
     employeeID: number;
     birthDate: Date;
 }
+
+/**
+ * Type: EducationLevel
+ *
+ * This type represents the different levels of education that an employee can have.
+ */
+export type EducationLevel = 'No High School Diploma' | 'High School Diploma' | 'Some College, No Degree' | 'Associate Degree' | 'Bachelor\'s Degree' | 'Master\'s Degree' | 'Doctoral or Professional Degree';

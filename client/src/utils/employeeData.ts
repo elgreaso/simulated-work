@@ -4,6 +4,7 @@ import hiresData from './data/hires.json';
 import populationData from './data/population.json';
 import { addDays, differenceInDays } from 'date-fns';
 import { WeightedRandomSelector } from './generateLUTs';
+import { EducationLevel } from '../types';
 
 /*-----------------------------------------------------------------------------*/
 
@@ -684,13 +685,6 @@ export const calculateEmail = (firstName: string, middleName: string, lastName: 
 /*-----------------------------------------------------------------------------*/
 
 /**
- * Type: EducationLevel
- *
- * This type represents the different levels of education that an employee can have.
- */
-type EducationLevel = 'No High School Diploma' | 'High School Diploma' | 'Some College, No Degree' | 'Associate Degree' | 'Bachelor\'s Degree' | 'Master\'s Degree' | 'Doctoral or Professional Degree';
-
-/**
  * Constant: educationData
  *
  * This constant contains a lookup table of the number of employees with each level of education.
@@ -698,20 +692,42 @@ type EducationLevel = 'No High School Diploma' | 'High School Diploma' | 'Some C
  */
 export const educationData: Record<EducationLevel, number> = require('./data/education.json');
 
+/**
+ * Function: calculateEducation
+ *
+ * This function calculates a random education level for a given year based on the educationData lookup table.
+ * The function uses a weighted random selection algorithm to select education levels with higher weights more often.
+ *
+ * @param year The year to calculate the education level for.
+ * @returns The calculated education level.
+ */
 export const calculateEducation = (year: number): EducationLevel => {
-    const currentYear = new Date().getFullYear();
-    const baseYearDiff = Math.abs(currentYear - year);
-  
-    let weights = Object.entries(educationData).reduce((acc, [level, weight], index) => {
-      const yearDiff = baseYearDiff * (index + 1) * 0.1; // Adding 1 to the index to avoid division by zero
-      const adjustedWeight = weight / Math.pow(yearDiff, 2);
+    // Define the peak year for education levels
+    const peakYear = 2010;
+
+    // Calculate the absolute difference between the peak year and the given year
+    const yearDiff = Math.abs(peakYear - year);
+    
+    // Calculate raw weights for each education level
+    let rawWeights = Object.entries(educationData).reduce((acc, [level, weight], index) => {
+      // Calculate the adjusted weight for the current education level
+      const adjustedWeight = weight * Math.pow((index + yearDiff / 5 + 1) / (index + 1), 2);
       return { ...acc, [level]: adjustedWeight };
     }, {} as Record<EducationLevel, number>);
+    
+    // Calculate the total weight of all education levels
+    const totalWeight = Object.values(rawWeights).reduce((sum, weight) => sum + weight, 0);
   
-    const totalWeight = Object.values(weights).reduce((sum, weight) => sum + weight, 0);
+    // Normalize the weights for each education level
+    let weights = Object.entries(rawWeights).reduce((acc, [level, weight]) => {
+      const normalizedWeight = weight / totalWeight;
+      return { ...acc, [level]: normalizedWeight };
+    }, {} as Record<EducationLevel, number>);
   
-    const random = Math.random() * totalWeight;
+    // Generate a random number between 0 and 1
+    const random = Math.random();
   
+    // Iterate over each education level and select the level with a weight greater than the random number
     let count = 0;
     for (const [level, weight] of Object.entries(weights)) {
       count += weight;
@@ -719,62 +735,77 @@ export const calculateEducation = (year: number): EducationLevel => {
         return level as EducationLevel;
       }
     }
-  
+    
+    // Throw an error if the function reaches this point, which should never happen if the data is valid
     throw new Error('Invalid data');
-};
-
-
+};  
 
 /*-----------------------------------------------------------------------------*/
 
+/**
+ * This function tracks education statistics over a range of years.
+ * It calculates the percentage of employees with each education level
+ * and prints the results every 5 years.
+ *
+ * @param startYear The first year to track education statistics for.
+ * @param endYear The last year to track education statistics for.
+ */
 export const trackEducationStatistics = (startYear: number, endYear: number): void => {
-    let counts = {
-      "No High School Diploma": 0,
-      "High School Diploma": 0,
-      "Some College, No Degree": 0,
-      "Associate Degree": 0,
-      "Bachelor's Degree": 0,
-      "Master's Degree": 0,
-      "Doctoral or Professional Degree": 0,
-    };
-  
-    let total = 0;
-  
-    for (let year = startYear; year <= endYear; year++) {
-      for (let i = 0; i < 1000; i++) {
-        const educationLevel = calculateEducation(year);
-  
-        if (counts.hasOwnProperty(educationLevel)) {
-          counts[educationLevel]++;
-          total++;
-        } else {
-          throw new Error(`Invalid education level: ${educationLevel}`);
-        }
-      }
-  
-      // Calculate and print statistics every 5 years
-      if (year % 5 === 0) {
-        console.log(`Year ${year}:`);
-        
-        for (const [level, count] of Object.entries(counts)) {
-          const percent = ((count / total) * 100).toFixed(2);
-          console.log(`    ${level}: ${percent}%`);
-        }
-  
-        // Reset counts for next 5-year period
-        counts = {
-          "No High School Diploma": 0,
-          "High School Diploma": 0,
-          "Some College, No Degree": 0,
-          "Associate Degree": 0,
-          "Bachelor's Degree": 0,
-          "Master's Degree": 0,
-          "Doctoral or Professional Degree": 0,
-        };
-        total = 0;
+  // Initialize an object to count the number of employees with each education level
+  let counts = {
+    "No High School Diploma": 0,
+    "High School Diploma": 0,
+    "Some College, No Degree": 0,
+    "Associate Degree": 0,
+    "Bachelor's Degree": 0,
+    "Master's Degree": 0,
+    "Doctoral or Professional Degree": 0,
+  };
+
+  // Initialize a variable to count the total number of employees
+  let total = 0;
+
+  // Iterate over each year in the range of years to track education statistics for
+  for (let year = startYear; year <= endYear; year++) {
+    // Generate 1000 random education levels for each year
+    for (let i = 0; i < 1000; i++) {
+      // Calculate a random education level for the current year
+      const educationLevel = calculateEducation(year);
+
+      // Increment the count for the current education level
+      if (counts.hasOwnProperty(educationLevel)) {
+        counts[educationLevel]++;
+        total++;
+      } else {
+        // Throw an error if the education level is invalid
+        throw new Error(`Invalid education level: ${educationLevel}`);
       }
     }
-  };
+
+    // Calculate and print statistics every 5 years
+    if (year % 5 === 0) {
+      console.log(`Year ${year}:`);
+
+      // Iterate over each education level and print the percentage of employees with that level
+      for (const [level, count] of Object.entries(counts)) {
+        const percent = ((count / total) * 100).toFixed(2);
+        console.log(`    ${level}: ${percent}%`);
+      }
+
+      // Reset counts for next 5-year period
+      counts = {
+        "No High School Diploma": 0,
+        "High School Diploma": 0,
+        "Some College, No Degree": 0,
+        "Associate Degree": 0,
+        "Bachelor's Degree": 0,
+        "Master's Degree": 0,
+        "Doctoral or Professional Degree": 0,
+      };
+      total = 0;
+    }
+  }
+};
   
   
 
