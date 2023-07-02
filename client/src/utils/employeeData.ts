@@ -697,11 +697,13 @@ export const educationData: Record<EducationLevel, number> = require('./data/edu
  *
  * This function calculates a random education level for a given year based on the educationData lookup table.
  * The function uses a weighted random selection algorithm to select education levels with higher weights more often.
+ * The function also checks the age of the employee based on their education level to ensure the education level is valid.
  *
  * @param year The year to calculate the education level for.
+ * @param birthYear The birth year of the employee.
  * @returns The calculated education level.
  */
-export const calculateEducation = (year: number): EducationLevel => {
+export const calculateEducation = (year: number, birthYear: number): EducationLevel => {
     // Define the peak year for education levels
     const peakYear = 2010;
 
@@ -732,7 +734,19 @@ export const calculateEducation = (year: number): EducationLevel => {
     for (const [level, weight] of Object.entries(weights)) {
       count += weight;
       if (random < count) {
-        return level as EducationLevel;
+        // Check the age of the employee based on their education level
+        const age = year - birthYear;
+        if (level === "Associate Degree" && age < 20) {
+          return "High School Diploma";
+        } else if (level === "Bachelor's Degree" && age < 22) {
+          return "High School Diploma";
+        } else if (level === "Master's Degree" && age < 24) {
+          return "High School Diploma";
+        } else if (level === "Doctoral or Professional Degree" && age < 26) {
+          return "High School Diploma";
+        } else {
+          return level as EducationLevel;
+        }
       }
     }
     
@@ -750,7 +764,7 @@ export const calculateEducation = (year: number): EducationLevel => {
  * @param startYear The first year to track education statistics for.
  * @param endYear The last year to track education statistics for.
  */
-export const trackEducationStatistics = (startYear: number, endYear: number): void => {
+export const trackEducationStatistics = (startYear: number, endYear: number, birthYear: number): void => {
   // Initialize an object to count the number of employees with each education level
   let counts = {
     "No High School Diploma": 0,
@@ -770,7 +784,7 @@ export const trackEducationStatistics = (startYear: number, endYear: number): vo
     // Generate 1000 random education levels for each year
     for (let i = 0; i < 1000; i++) {
       // Calculate a random education level for the current year
-      const educationLevel = calculateEducation(year);
+      const educationLevel = calculateEducation(year, birthYear);
 
       // Increment the count for the current education level
       if (counts.hasOwnProperty(educationLevel)) {

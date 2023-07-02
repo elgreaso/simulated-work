@@ -28,16 +28,16 @@ export const generateEmployees = async (numEmployees: number, simStartYear: numb
     let initialEmployees = employmentDates;
     let employees: Employee[] = [];
 
-    employeeData.trackEducationStatistics(simStartYear, simEndYear)
-
     // Insert initial employees
     for (let initialEmployee of initialEmployees) {
-        let educationLevel = employeeData.calculateEducation(simStartYear);
         let birthDate = employeeData.calculateBirthDate(initialEmployee.startDate, avgStartAge, stdevStartAge);
+        let educationLevel = employeeData.calculateEducation(simStartYear, birthDate.getFullYear());
         let sex = employeeData.calculateSex();
         let firstName = employeeData.calculateFirstName(sex, birthDate);
         let middleName = employeeData.calculateMiddleName(sex, birthDate, firstName);
         let lastName = employeeData.calculateLastName();
+
+        employeeData.trackEducationStatistics(simStartYear, simEndYear, birthDate.getFullYear())
         
         let employee: Employee = {
             ID: employees.length,
@@ -69,8 +69,8 @@ export const generateEmployees = async (numEmployees: number, simStartYear: numb
         numCurrentEmployees -= endDatesCount[year];
         numCurrentEmployees += yearNewHires;
         for (let i = 0; i < yearNewHires; i++) {
-            let educationLevel = employeeData.calculateEducation(year);
             let birthDate = employeeData.calculateBirthDate(startDates[i], avgStartAge, stdevStartAge);
+            let educationLevel = employeeData.calculateEducation(year, birthDate.getFullYear());
             let sex = employeeData.calculateSex();
             let firstName = employeeData.calculateFirstName(sex, birthDate);
             let middleName = employeeData.calculateMiddleName(sex, birthDate, firstName);
