@@ -37,8 +37,6 @@ export const generateEmployees = async (numEmployees: number, simStartYear: numb
         let middleName = employeeData.calculateMiddleName(sex, birthDate, firstName);
         let lastName = employeeData.calculateLastName();
 
-        employeeData.trackEducationStatistics(simStartYear, simEndYear, birthDate.getFullYear())
-        
         let employee: Employee = {
             ID: employees.length,
             DOB: birthDate.getTime(),
@@ -50,6 +48,7 @@ export const generateEmployees = async (numEmployees: number, simStartYear: numb
             StartDate: initialEmployee.startDate.getTime(),
             EndDate: initialEmployee.endDate ? initialEmployee.endDate.getTime() : null,
             EducationLevel: educationLevel,
+            YearsExperience: 0,
             PositionID: 0,
             BranchID: 0,
             SupervisorID: 0,
@@ -57,6 +56,11 @@ export const generateEmployees = async (numEmployees: number, simStartYear: numb
         };
         employees.push(employee);
     }
+
+    // Create a list of employee ages
+    const employeeAges = employees.map(employee => simStartYear - new Date(employee.DOB).getFullYear());
+    employeeData.trackEducationStatistics(simStartYear, simEndYear, employeeAges);
+    console.log(employeeAges);
 
     // Count the number of current employees
     let numCurrentEmployees = employmentDates.length;
@@ -80,6 +84,7 @@ export const generateEmployees = async (numEmployees: number, simStartYear: numb
                 StartDate: startDates[i].getTime(),
                 EndDate: employeeData.calculateEndDate(startDates[i], employeeHalfLife).getTime(),
                 EducationLevel: educationLevel,
+                YearsExperience: 0,
                 DOB: birthDate.getTime(),
                 Sex: sex,
                 FirstName: firstName,

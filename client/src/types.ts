@@ -31,6 +31,7 @@ export interface Employee {
     StartDate: number;
     EndDate: number | null;
     EducationLevel: string;
+    YearsExperience: number;
     PositionID: number;
     BranchID: number;
     SupervisorID: number | null;

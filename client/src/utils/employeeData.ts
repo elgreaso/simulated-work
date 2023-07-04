@@ -713,7 +713,7 @@ export const calculateEducation = (year: number, birthYear: number): EducationLe
     // Calculate raw weights for each education level
     let rawWeights = Object.entries(educationData).reduce((acc, [level, weight], index) => {
       // Calculate the adjusted weight for the current education level
-      const adjustedWeight = weight * Math.pow((index + yearDiff / 5 + 1) / (index + 1), 2);
+      const adjustedWeight = weight * Math.pow((index + yearDiff / 10 + 1) / (index + 1), 2);
       return { ...acc, [level]: adjustedWeight };
     }, {} as Record<EducationLevel, number>);
     
@@ -764,7 +764,13 @@ export const calculateEducation = (year: number, birthYear: number): EducationLe
  * @param startYear The first year to track education statistics for.
  * @param endYear The last year to track education statistics for.
  */
-export const trackEducationStatistics = (startYear: number, endYear: number, birthYear: number): void => {
+export const trackEducationStatistics = (startYear: number, endYear: number, employeeAges: number[]): void => {
+  // Check if the range of years is at least 5 years
+  if (endYear - startYear < 5) {
+    console.log("Error: Range of years must be at least 5 years.");
+    return;
+  }
+
   // Initialize an object to count the number of employees with each education level
   let counts = {
     "No High School Diploma": 0,
@@ -782,9 +788,9 @@ export const trackEducationStatistics = (startYear: number, endYear: number, bir
   // Iterate over each year in the range of years to track education statistics for
   for (let year = startYear; year <= endYear; year++) {
     // Generate 1000 random education levels for each year
-    for (let i = 0; i < 1000; i++) {
+    for (let employeeAge of employeeAges) {
       // Calculate a random education level for the current year
-      const educationLevel = calculateEducation(year, birthYear);
+      const educationLevel = calculateEducation(year, year - employeeAge);
 
       // Increment the count for the current education level
       if (counts.hasOwnProperty(educationLevel)) {
