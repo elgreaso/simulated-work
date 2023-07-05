@@ -50,6 +50,8 @@ export const generateEmployees = async (numEmployees: number, simStartYear: numb
             EducationLevel: educationLevel,
             YearsExperience: 0,
             PositionID: 0,
+            EmploymentType: "Full Time",
+            SalaryID: 0,
             BranchID: 0,
             SupervisorID: 0,
             Status: "Removed"
@@ -92,6 +94,8 @@ export const generateEmployees = async (numEmployees: number, simStartYear: numb
                 LastName: lastName,
                 Email: employeeData.calculateEmail(firstName, middleName, lastName),
                 PositionID: 0,
+                EmploymentType: "Full Time",
+                SalaryID: 0,
                 BranchID: 0,
                 SupervisorID: 0,
                 Status: "Removed"

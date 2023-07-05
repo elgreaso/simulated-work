@@ -33,6 +33,8 @@ export interface Employee {
     EducationLevel: string;
     YearsExperience: number;
     PositionID: number;
+    EmploymentType: string;
+    SalaryID: number;
     BranchID: number;
     SupervisorID: number | null;
     Status: string;

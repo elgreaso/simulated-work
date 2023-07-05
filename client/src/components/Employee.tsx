@@ -29,6 +29,8 @@ const Employee: React.FC<EmployeeProps> = ({ employee }) => {
       <p>Education Level: {employee.EducationLevel}</p>
       <p>YearsExperience: {employee.YearsExperience}</p>
       <p>Position ID: {employee.PositionID}</p>
+      <p>EmploymentType: {employee.EmploymentType}</p>
+      <p>SalaryID: {employee.SalaryID}</p>
       <p>Branch ID: {employee.BranchID}</p>
       <p>Supervisor ID: {employee.SupervisorID}</p>
       <p>Status: {employee.Status}</p>
