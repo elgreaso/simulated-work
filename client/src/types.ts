@@ -32,6 +32,14 @@ export interface Employee {
     EndDate: number | null;
     EducationLevel: string;
     YearsExperience: number;
+    StreetAddress: string;
+    City: string;
+    State: string;
+    ZipCode: string;
+    Country: string;
+    CellNumber: string;
+    HomeNumber: string;
+    WorkNumber: string;
     PositionID: number;
     EmploymentType: string;
     SalaryID: number;
