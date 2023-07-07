@@ -826,8 +826,31 @@ export const trackEducationStatistics = (startYear: number, endYear: number, emp
     }
   }
 };
-  
-  
+
+/*-----------------------------------------------------------------------------*/
+
+//Calculate an employee's home phone number based on their birth year
+export const calculateHomeNumber = (birthYear: number): string => {
+    //For employees born before 1956, the area code is 703
+    //For employees born between 1956 and 1978, the area code is 804
+    //For employees born between 1978 and 2022, the area code is 757
+    //For employees born after 2022, the area code is 948
+    let areaCode: string;
+    if (birthYear < 1956) {
+        areaCode = "703";
+    } else if (birthYear < 1978) {
+        areaCode = "804";
+    } else if (birthYear < 2022) {
+        areaCode = "757";
+    } else {
+        areaCode = "948";
+    }
+    //The prefix is a random 3-digit number between 200 and 999
+    const prefix = Math.floor(Math.random() * 800) + 200;
+    //The suffix is a random 4-digit number
+    const suffix = Math.floor(Math.random() * 10000);
+    return `(${areaCode}) ${prefix}-${suffix}`;
+};
 
 /*-----------------------------------------------------------------------------*/
 

@@ -36,6 +36,7 @@ export const generateEmployees = async (numEmployees: number, simStartYear: numb
         let firstName = employeeData.calculateFirstName(sex, birthDate);
         let middleName = employeeData.calculateMiddleName(sex, birthDate, firstName);
         let lastName = employeeData.calculateLastName();
+        let homeNumber = employeeData.calculateHomeNumber(birthDate.getFullYear());
 
         let employee: Employee = {
             ID: employees.length,
@@ -55,7 +56,7 @@ export const generateEmployees = async (numEmployees: number, simStartYear: numb
             ZipCode: "",
             Country: "",
             CellNumber: "",
-            HomeNumber: "",
+            HomeNumber: homeNumber,
             WorkNumber: "",
             PositionID: 0,
             EmploymentType: "Full Time",
@@ -89,6 +90,7 @@ export const generateEmployees = async (numEmployees: number, simStartYear: numb
             let firstName = employeeData.calculateFirstName(sex, birthDate);
             let middleName = employeeData.calculateMiddleName(sex, birthDate, firstName);
             let lastName = employeeData.calculateLastName();
+            let homeNumber = employeeData.calculateHomeNumber(birthDate.getFullYear());
             let employee: Employee = {
                 ID: employees.length,
                 StartDate: startDates[i].getTime(),
@@ -101,7 +103,7 @@ export const generateEmployees = async (numEmployees: number, simStartYear: numb
                 ZipCode: "",
                 Country: "",
                 CellNumber: "",
-                HomeNumber: "",
+                HomeNumber: homeNumber,
                 WorkNumber: "",
                 DOB: birthDate.getTime(),
                 Sex: sex,
