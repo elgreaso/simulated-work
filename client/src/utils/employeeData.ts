@@ -829,8 +829,40 @@ export const trackEducationStatistics = (startYear: number, endYear: number, emp
 
 /*-----------------------------------------------------------------------------*/
 
-//Calculate an employee's home phone number based on their birth year
-export const calculateHomeNumber = (birthYear: number): string => {
+/**
+ * This function calculates the years of experience for an employee based on their education level and birth year.
+ *
+ * @param year The year the employee was hired.
+ * @param educationLevel The education level of the employee.
+ * @param birthYear The birth year of the employee.
+ * @returns The number of years of experience the employee has.
+ */
+export const calculateYearsExperience = (year: number, educationLevel: string, birthYear: number): number => {
+    // Calculate the age of the employee at hire
+    const ageAtHire = year - birthYear;
+
+    // Subtract the years of education from the age at hire to get the years of experience
+    let yearsExperience = ageAtHire - 18; // Subtract 18 years for high school education
+
+    if (educationLevel === "Some College, No Degree") {
+        yearsExperience -= 1; // Subtract 1 year for some college
+    } else if (educationLevel === "Associate Degree") {
+        yearsExperience -= 2; // Subtract 2 years for an associate degree
+    } else if (educationLevel === "Bachelor's Degree") {
+        yearsExperience -= 4; // Subtract 4 years for a bachelor's degree
+    } else if (educationLevel === "Master's Degree") {
+        yearsExperience -= 6; // Subtract 6 years for a master's degree (4 for bachelor's + 2 for master's)
+    } else if (educationLevel === "Doctoral or Professional Degree") {
+        yearsExperience -= 8; // Subtract 8 years for a doctoral or professional degree (4 for bachelor's + 2 for master's + 2 for doctorate)
+  }
+
+  return yearsExperience;
+};
+
+/*-----------------------------------------------------------------------------*/
+
+//Calculate an employee's phone number based on their birth year
+export const calculatePhoneNumber = (birthYear: number): string => {
     //For employees born before 1956, the area code is 703
     //For employees born between 1956 and 1978, the area code is 804
     //For employees born between 1978 and 2022, the area code is 757

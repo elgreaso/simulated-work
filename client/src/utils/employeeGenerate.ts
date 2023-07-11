@@ -31,12 +31,15 @@ export const generateEmployees = async (numEmployees: number, simStartYear: numb
     // Insert initial employees
     for (let initialEmployee of initialEmployees) {
         let birthDate = employeeData.calculateBirthDate(initialEmployee.startDate, avgStartAge, stdevStartAge);
-        let educationLevel = employeeData.calculateEducation(simStartYear, birthDate.getFullYear());
+        let educationLevel = employeeData.calculateEducation(initialEmployee.startDate.getFullYear(), birthDate.getFullYear());
+        let yearsExperience = employeeData.calculateYearsExperience(initialEmployee.startDate.getFullYear(), educationLevel, birthDate.getFullYear());
         let sex = employeeData.calculateSex();
         let firstName = employeeData.calculateFirstName(sex, birthDate);
         let middleName = employeeData.calculateMiddleName(sex, birthDate, firstName);
         let lastName = employeeData.calculateLastName();
-        let homeNumber = employeeData.calculateHomeNumber(birthDate.getFullYear());
+        let cellNumber = employeeData.calculatePhoneNumber(birthDate.getFullYear());
+        let homeNumber = employeeData.calculatePhoneNumber(birthDate.getFullYear());
+        let workNumber = employeeData.calculatePhoneNumber(birthDate.getFullYear());
 
         let employee: Employee = {
             ID: employees.length,
@@ -49,15 +52,15 @@ export const generateEmployees = async (numEmployees: number, simStartYear: numb
             StartDate: initialEmployee.startDate.getTime(),
             EndDate: initialEmployee.endDate ? initialEmployee.endDate.getTime() : null,
             EducationLevel: educationLevel,
-            YearsExperience: 0,
+            YearsExperience: yearsExperience,
             StreetAddress: "",
             City: "",
             State: "",
             ZipCode: "",
             Country: "",
-            CellNumber: "",
+            CellNumber: cellNumber,
             HomeNumber: homeNumber,
-            WorkNumber: "",
+            WorkNumber: workNumber,
             PositionID: 0,
             EmploymentType: "Full Time",
             SalaryID: 0,
@@ -86,25 +89,28 @@ export const generateEmployees = async (numEmployees: number, simStartYear: numb
         for (let i = 0; i < yearNewHires; i++) {
             let birthDate = employeeData.calculateBirthDate(startDates[i], avgStartAge, stdevStartAge);
             let educationLevel = employeeData.calculateEducation(year, birthDate.getFullYear());
+            let yearsExperience = employeeData.calculateYearsExperience(year, educationLevel, birthDate.getFullYear());
             let sex = employeeData.calculateSex();
             let firstName = employeeData.calculateFirstName(sex, birthDate);
             let middleName = employeeData.calculateMiddleName(sex, birthDate, firstName);
             let lastName = employeeData.calculateLastName();
-            let homeNumber = employeeData.calculateHomeNumber(birthDate.getFullYear());
+            let cellNumber = employeeData.calculatePhoneNumber(birthDate.getFullYear());
+            let homeNumber = employeeData.calculatePhoneNumber(birthDate.getFullYear());
+            let workNumber = employeeData.calculatePhoneNumber(birthDate.getFullYear());
             let employee: Employee = {
                 ID: employees.length,
                 StartDate: startDates[i].getTime(),
                 EndDate: employeeData.calculateEndDate(startDates[i], employeeHalfLife).getTime(),
                 EducationLevel: educationLevel,
-                YearsExperience: 0,
+                YearsExperience: yearsExperience,
                 StreetAddress: "",
                 City: "",
                 State: "",
                 ZipCode: "",
                 Country: "",
-                CellNumber: "",
+                CellNumber: cellNumber,
                 HomeNumber: homeNumber,
-                WorkNumber: "",
+                WorkNumber: workNumber,
                 DOB: birthDate.getTime(),
                 Sex: sex,
                 FirstName: firstName,
